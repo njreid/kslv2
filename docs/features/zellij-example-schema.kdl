@@ -1,0 +1,305 @@
+/- kdl-version 2
+
+// Illustrative schema for major parts of Zellij's configuration surface.
+// This uses KDL v2 syntax plus one intentional extension: backtick CEL strings.
+schema "https://example.com/schemas/zellij-config" version="0.1.0" {
+  info title="Zellij Config Schema" description="Illustrative schema for common Zellij configuration sections"
+
+  define "path-string" {
+    value {
+      type "string"
+      min-length 1
+      format "path"
+      doc "Filesystem path"
+    }
+  }
+
+  define "mode-name" {
+    value {
+      type "string"
+      enum "normal" "locked" "resize" "pane" "move" "tab" "scroll" "search" "session" "tmux" "renametab" "renamepane"
+      doc "Zellij input mode"
+    }
+  }
+
+  define "plugin-location" {
+    value {
+      type "string"
+      min-length 1
+      doc "Plugin URI such as zellij:tab-bar or file:/path/plugin.wasm"
+      example "zellij:status-bar"
+    }
+  }
+
+  define "rgb-color" {
+    node "color" {
+      arg 0 {
+        type "integer"
+        between 0 255
+      }
+      arg 1 {
+        type "integer"
+        between 0 255
+      }
+      arg 2 {
+        type "integer"
+        between 0 255
+      }
+      doc "RGB triple"
+    }
+  }
+
+  document {
+    doc "Top-level Zellij config file"
+
+    node "default_shell" optional {
+      doc "Override shell used for new panes"
+      arg 0 ref="path-string"
+    }
+
+    node "default_cwd" optional {
+      doc "Override default working directory for new panes"
+      arg 0 ref="path-string"
+    }
+
+    node "default_mode" optional {
+      doc "Mode that Zellij starts in"
+      arg 0 ref="mode-name"
+    }
+
+    node "theme" optional {
+      doc "Name of the active theme"
+      arg 0 {
+        type "string"
+        min-length 1
+      }
+    }
+
+    node "pane_frames" optional {
+      doc "Show or hide pane frames"
+      arg 0 {
+        type "boolean"
+      }
+    }
+
+    node "simplified_ui" optional {
+      doc "Request a simplified UI from plugins"
+      arg 0 {
+        type "boolean"
+      }
+    }
+
+    node "mouse_mode" optional {
+      doc "Enable mouse support"
+      arg 0 {
+        type "boolean"
+      }
+    }
+
+    node "copy_on_select" optional {
+      doc "Copy selection immediately when selecting text"
+      arg 0 {
+        type "boolean"
+      }
+    }
+
+    node "scrollback_editor" optional {
+      doc "Editor binary used to inspect scrollback"
+      arg 0 ref="path-string"
+    }
+
+    node "layout_dir" optional {
+      doc "Directory where Zellij searches for layouts"
+      arg 0 ref="path-string"
+    }
+
+    node "theme_dir" optional {
+      doc "Directory where Zellij searches for themes"
+      arg 0 ref="path-string"
+    }
+
+    node "plugins" optional {
+      doc "Plugin alias declarations"
+      children open {
+        node "tab-bar" optional {
+          props closed
+          prop "location" required ref="plugin-location"
+          doc "Alias for the tab bar plugin"
+        }
+        node "status-bar" optional {
+          props closed
+          prop "location" required ref="plugin-location"
+          doc "Alias for the status bar plugin"
+        }
+        node "strider" optional {
+          props closed
+          prop "location" required ref="plugin-location"
+        }
+        node "compact-bar" optional {
+          props closed
+          prop "location" required ref="plugin-location"
+        }
+        node "session-manager" optional {
+          props closed
+          prop "location" required ref="plugin-location"
+        }
+        node "welcome-screen" optional {
+          props closed
+          prop "location" required ref="plugin-location"
+          children closed {
+            node "welcome_screen" optional {
+              arg 0 {
+                type "boolean"
+              }
+              doc "Enable the welcome-screen behavior inside this plugin alias"
+            }
+          }
+        }
+        node "configuration" optional {
+          props closed
+          prop "location" required ref="plugin-location"
+        }
+      }
+    }
+
+    node "load_plugins" optional {
+      doc "Plugins loaded in the background at session start"
+      args at-least=1 {
+        type "string"
+        min-length 1
+      }
+    }
+
+    node "themes" optional {
+      doc "Named color themes"
+      children open {
+        node "theme" many {
+          arg 0 {
+            type "string"
+            min-length 1
+            doc "Theme name"
+          }
+          children closed {
+            node "fg" optional ref="rgb-color"
+            node "bg" optional ref="rgb-color"
+            node "black" optional ref="rgb-color"
+            node "red" optional ref="rgb-color"
+            node "green" optional ref="rgb-color"
+            node "yellow" optional ref="rgb-color"
+            node "blue" optional ref="rgb-color"
+            node "magenta" optional ref="rgb-color"
+            node "cyan" optional ref="rgb-color"
+            node "white" optional ref="rgb-color"
+            node "orange" optional ref="rgb-color"
+          }
+        }
+      }
+    }
+
+    node "keybinds" optional {
+      doc "Mode-specific keybinding declarations"
+      props open
+      prop "clear-defaults" optional {
+        type "boolean"
+      }
+      children open {
+        node "normal" optional ref="keybind-mode"
+        node "locked" optional ref="keybind-mode"
+        node "resize" optional ref="keybind-mode"
+        node "pane" optional ref="keybind-mode"
+        node "move" optional ref="keybind-mode"
+        node "tab" optional ref="keybind-mode"
+        node "scroll" optional ref="keybind-mode"
+        node "search" optional ref="keybind-mode"
+        node "session" optional ref="keybind-mode"
+        node "tmux" optional ref="keybind-mode"
+        node "renametab" optional ref="keybind-mode"
+        node "renamepane" optional ref="keybind-mode"
+
+        node "shared" many ref="shared-keybind-mode"
+        node "shared_except" many ref="shared-keybind-mode"
+      }
+    }
+  }
+
+  define "keybind-mode" {
+    children open {
+      node "bind" many {
+        doc "One keybinding mapping"
+        args at-least=1 {
+          type "string"
+          min-length 1
+          highlight token="keybinding"
+        }
+        children open {
+          node "SwitchToMode" optional {
+            arg 0 ref="mode-name"
+            doc "Switch the active input mode"
+          }
+          node "Resize" optional {
+            arg 0 {
+              type "string"
+              min-length 1
+            }
+          }
+          node "MoveFocus" optional {
+            arg 0 {
+              type "string"
+              enum "Left" "Right" "Up" "Down"
+            }
+          }
+          node "NewPane" optional {
+            arg 0 optional {
+              type "string"
+            }
+          }
+          node "CloseFocus" optional
+          node "ToggleFloatingPanes" optional
+          node "TogglePaneFrames" optional
+          node "GoToTab" optional {
+            arg 0 {
+              type "integer"
+              min 1
+            }
+          }
+          node "Detach" optional
+          node "Copy" optional
+          node "SearchInput" optional {
+            arg 0 {
+              type "integer"
+              min 0
+            }
+          }
+        }
+        assert `countChild("SwitchToMode") + countChild("Resize") + countChild("MoveFocus") + countChild("NewPane") + countChild("CloseFocus") + countChild("ToggleFloatingPanes") + countChild("TogglePaneFrames") + countChild("GoToTab") + countChild("Detach") + countChild("Copy") + countChild("SearchInput") >= 1`
+      }
+    }
+  }
+
+  define "shared-keybind-mode" {
+    args at-least=1 {
+      type "string"
+      ref "mode-name"
+      doc "Modes included in the shared binding rule"
+    }
+    children open {
+      node "bind" many ref="bind-only"
+    }
+  }
+
+  define "bind-only" {
+    node "bind" {
+      args at-least=1 {
+        type "string"
+        min-length 1
+      }
+      children open {
+        node "SwitchToMode" optional {
+          arg 0 ref="mode-name"
+        }
+        node "Detach" optional
+      }
+      assert `countChild("SwitchToMode") + countChild("Detach") >= 1`
+    }
+  }
+}

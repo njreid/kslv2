@@ -1,0 +1,92 @@
+/- kdl-version 2
+
+// This example uses KDL v2 syntax plus one intentional extension:
+// backtick-delimited CEL strings in `assert` and `default` nodes.
+schema "https://example.com/schemas/service" version="1.0.0" {
+  info title="Service Config" description="Generic example for the improved KSL surface syntax"
+
+  define "hostname" {
+    value {
+      type "string"
+      format "hostname"
+      doc "DNS hostname or host-like label"
+    }
+  }
+
+  define "port" {
+    value {
+      type "integer"
+      between 1 65535
+      doc "TCP or UDP port number"
+    }
+  }
+
+  document {
+    node "service" required {
+      doc "Root service configuration"
+
+      prop "name" required {
+        type "string"
+        min-length 1
+        doc "Stable service name"
+      }
+
+      prop "mode" required {
+        type "string"
+        enum "tcp" "unix"
+        doc "Connection mode"
+      }
+
+      if {
+        prop "mode" {
+          const "tcp"
+        }
+      }
+      then {
+        prop "host" required ref="hostname"
+        prop "port" required ref="port"
+      }
+      else {
+        prop "socket" required {
+          type "string"
+        }
+      }
+
+      children closed {
+        node "env" many {
+          doc "Environment variable assignment"
+          arg 0 {
+            type "string"
+            min-length 1
+            highlight token="variable"
+          }
+          arg 1 {
+            type "string"
+          }
+        }
+
+        node "tls" optional {
+          doc "TLS material for secure listeners"
+          dependent-required child="cert" requires-children="key"
+          dependent-required child="key" requires-children="cert"
+
+          children closed {
+            node "cert" required {
+              arg 0 {
+                type "string"
+              }
+            }
+            node "key" required {
+              arg 0 {
+                type "string"
+              }
+            }
+          }
+        }
+      }
+
+      assert `props.mode == "tcp" ? hasProp("host") && hasProp("port") : hasProp("socket")`
+      default `props.mode == "tcp" ? "network" : "local"`
+    }
+  }
+}
