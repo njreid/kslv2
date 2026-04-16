@@ -1,0 +1,359 @@
+/- kdl-version 2
+
+// Illustrative schema for major parts of Niri's configuration surface.
+// This uses KDL v2 syntax plus one intentional extension: backtick CEL strings.
+schema "https://example.com/schemas/niri-config" version="0.1.0" {
+  info title="Niri Config Schema" description="Illustrative schema for common Niri configuration sections"
+
+  define bool-flag-node {
+    node flag {
+      doc:summary "Reusable marker for flag-like child nodes that are enabled by presence"
+    }
+  }
+
+  define key-chord {
+    value {
+      type string
+      min-length 1
+      doc:summary "A key combination such as Mod+T or Super+Alt+L"
+      doc:example "Mod+T"
+    }
+  }
+
+  define percent-string {
+    value {
+      type string
+      pattern #"^[0-9]+%$"#
+      doc:summary "A percentage string such as 0% or 50%"
+      doc:example "0%"
+    }
+  }
+
+  define command-args {
+    children closed {
+      node spawn optional {
+        doc:summary "Launch a program directly"
+        args at-least=1 {
+          type string
+        }
+      }
+
+      node spawn-sh optional {
+        doc:summary "Launch a shell command via sh -c"
+        arg 0 {
+          type string
+        }
+      }
+
+      node quit optional {
+        doc:summary "Quit Niri"
+      }
+
+      node close-window optional {
+        doc:summary "Close the focused window"
+      }
+
+      node fullscreen-window optional {
+        doc:summary "Toggle fullscreen on the focused window"
+      }
+
+      node maximize-window-to-edges optional {
+        doc:summary "Maximize the focused window to the monitor edges"
+      }
+    }
+  }
+
+  document {
+    doc:summary "Top-level Niri config file"
+
+    node input optional {
+      doc:summary "Input device and focus behavior settings"
+      children closed {
+        node keyboard optional {
+          doc:summary "Keyboard-related configuration"
+          children closed {
+            node xkb optional {
+              doc:summary "XKB rules, model, layout, variant, and options"
+              props closed
+              prop rules optional {
+                type string
+              }
+              prop model optional {
+                type string
+              }
+              prop layout optional {
+                type string
+              }
+              prop variant optional {
+                type string
+              }
+              prop options optional {
+                type string
+              }
+            }
+
+            node numlock optional {
+              doc:summary "Enable numlock on startup"
+            }
+          }
+        }
+
+        node touchpad optional {
+          doc:summary "Touchpad libinput settings"
+          children closed {
+            node off optional { doc:summary "Disable the touchpad" }
+            node tap optional { doc:summary "Enable tap-to-click" }
+            node dwt optional { doc:summary "Disable while typing" }
+            node dwtp optional { doc:summary "Disable while trackpoint in use" }
+            node drag optional {
+              doc:summary "Toggle drag after tap"
+              arg 0 {
+                type boolean
+              }
+            }
+            node drag-lock optional { doc:summary "Keep dragging active after release" }
+            node natural-scroll optional { doc:summary "Use natural scrolling" }
+            node accel-speed optional {
+              arg 0 {
+                type number
+              }
+              doc:summary "Pointer acceleration speed"
+            }
+            node accel-profile optional {
+              arg 0 {
+                type string
+                enum adaptive flat
+              }
+            }
+            node scroll-method optional {
+              arg 0 {
+                type string
+                enum two-finger edge no-scroll on-button-down
+              }
+            }
+            node disabled-on-external-mouse optional {
+              doc:summary "Disable touchpad when an external mouse is present"
+            }
+          }
+        }
+
+        node mouse optional {
+          doc:summary "Mouse libinput settings"
+          children closed {
+            node off optional
+            node natural-scroll optional
+            node accel-speed optional {
+              arg 0 {
+                type number
+              }
+            }
+            node accel-profile optional {
+              arg 0 {
+                type string
+                enum adaptive flat
+              }
+            }
+            node scroll-method optional {
+              arg 0 {
+                type string
+                enum no-scroll on-button-down
+              }
+            }
+          }
+        }
+
+        node trackpoint optional {
+          doc:summary "Trackpoint settings"
+          children closed {
+            node off optional
+            node natural-scroll optional
+            node accel-speed optional {
+              arg 0 {
+                type number
+              }
+            }
+            node accel-profile optional {
+              arg 0 {
+                type string
+                enum adaptive flat
+              }
+            }
+            node scroll-method optional {
+              arg 0 {
+                type string
+                enum on-button-down no-scroll
+              }
+            }
+            node scroll-button optional {
+              arg 0 {
+                type integer
+                min 0
+              }
+            }
+            node scroll-button-lock optional
+            node middle-emulation optional
+          }
+        }
+
+        node warp-mouse-to-focus optional {
+          doc:summary "Warp the pointer to newly focused windows"
+        }
+
+        node focus-follows-mouse optional {
+          doc:summary "Focus windows and outputs when the pointer enters them"
+          props closed
+          prop max-scroll-amount optional ref=percent-string
+        }
+      }
+    }
+
+    node output many {
+      doc:summary "Per-output settings keyed by output name"
+      arg 0 {
+        type string
+        min-length 1
+        doc:summary "Output name such as eDP-1 or HDMI-A-1"
+      }
+      children closed {
+        node off optional {
+          doc:summary "Disable this output"
+        }
+        node mode optional {
+          arg 0 {
+            type string
+            pattern #"^[0-9]+x[0-9]+(@[0-9.]+)?$"#
+            doc:summary "Display mode string like 1920x1080 or 1920x1080@120.030"
+          }
+        }
+        node scale optional {
+          arg 0 {
+            type number
+            min 0.1
+          }
+        }
+        node transform optional {
+          arg 0 {
+            type string
+            enum normal 90 180 270 flipped flipped-90 flipped-180 flipped-270
+          }
+        }
+        node position optional {
+          props closed
+          prop x required {
+            type integer
+          }
+          prop y required {
+            type integer
+          }
+          doc:summary "Logical output position in the global coordinate space"
+        }
+      }
+    }
+
+    node layout optional {
+      doc:summary "Global layout behavior"
+      children closed {
+        node gaps optional {
+          arg 0 {
+            type integer
+            min 0
+          }
+        }
+        node center-focused-column optional {
+          doc:summary "Center the active column"
+        }
+        node preset-column-widths optional {
+          doc:summary "Preferred widths for new columns"
+          children closed {
+            node proportion many {
+              arg 0 {
+                type number
+                min 0
+              }
+            }
+            node fixed many {
+              arg 0 {
+                type integer
+                min 1
+              }
+            }
+          }
+        }
+      }
+    }
+
+    node binds optional {
+      doc:summary "Keyboard shortcuts and associated actions"
+      children closed {
+        node bind many {
+          doc:summary "One keybinding declaration"
+          args at-least=1 {
+            type string
+            min-length 1
+            highlight token="keybinding"
+          }
+          props open
+          prop allow-when-locked optional {
+            type boolean
+          }
+          prop hotkey-overlay-title optional {
+            type string
+          }
+          children open {
+            ref command-args
+          }
+          assert `countChild("spawn") + countChild("spawn-sh") + countChild("quit") + countChild("close-window") + countChild("fullscreen-window") + countChild("maximize-window-to-edges") >= 1`
+        }
+      }
+    }
+
+    node window-rule many {
+      doc:summary "Match-specific rules applied to windows"
+      props open
+      prop matches optional {
+        type string
+        doc:summary "Matcher expression or shorthand"
+      }
+      children open {
+        node open-on-output optional {
+          arg 0 {
+            type string
+          }
+        }
+        node open-maximized optional
+        node open-fullscreen optional
+        node draw-border-with-background optional
+        node opacity optional {
+          arg 0 {
+            type number
+            min 0
+            max 1
+          }
+        }
+      }
+    }
+
+    node animations optional {
+      doc:summary "Animation and timing controls"
+      children open {
+        node workspace-switch optional {
+          doc:summary "Workspace switching animation"
+        }
+        node window-open optional {
+          doc:summary "Window opening animation"
+        }
+        node window-close optional {
+          doc:summary "Window closing animation"
+        }
+      }
+    }
+
+    node include many {
+      doc:summary "Include another KDL file"
+      arg 0 {
+        type string
+        format path
+      }
+    }
+  }
+}

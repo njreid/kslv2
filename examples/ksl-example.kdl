@@ -5,80 +5,80 @@
 schema "https://example.com/schemas/service" version="1.0.0" {
   info title="Service Config" description="Generic example for the improved KSL surface syntax"
 
-  define "hostname" {
+  define hostname {
     value {
-      type "string"
-      format "hostname"
-      doc "DNS hostname or host-like label"
+      type string
+      format hostname
+      doc:summary "DNS hostname or host-like label"
     }
   }
 
-  define "port" {
+  define port {
     value {
-      type "integer"
+      type integer
       between 1 65535
-      doc "TCP or UDP port number"
+      doc:summary "TCP or UDP port number"
     }
   }
 
   document {
-    node "service" required {
-      doc "Root service configuration"
+    node service required {
+      doc:summary "Root service configuration"
 
-      prop "name" required {
-        type "string"
+      prop name required {
+        type string
         min-length 1
-        doc "Stable service name"
+        doc:summary "Stable service name"
       }
 
-      prop "mode" required {
-        type "string"
-        enum "tcp" "unix"
-        doc "Connection mode"
+      prop mode required {
+        type string
+        enum tcp unix
+        doc:summary "Connection mode"
       }
 
       if {
-        prop "mode" {
-          const "tcp"
+        prop mode {
+          const tcp
         }
       }
       then {
-        prop "host" required ref="hostname"
-        prop "port" required ref="port"
+        prop host required ref=hostname
+        prop port required ref=port
       }
       else {
-        prop "socket" required {
-          type "string"
+        prop socket required {
+          type string
         }
       }
 
       children closed {
-        node "env" many {
-          doc "Environment variable assignment"
+        node env many {
+          doc:summary "Environment variable assignment"
           arg 0 {
-            type "string"
+            type string
             min-length 1
             highlight token="variable"
           }
           arg 1 {
-            type "string"
+            type string
           }
         }
 
-        node "tls" optional {
-          doc "TLS material for secure listeners"
+        node tls optional {
+          doc:summary "TLS material for secure listeners"
           dependent-required child="cert" requires-children="key"
           dependent-required child="key" requires-children="cert"
 
           children closed {
-            node "cert" required {
+            node cert required {
               arg 0 {
-                type "string"
+                type string
               }
             }
-            node "key" required {
+            node key required {
               arg 0 {
-                type "string"
+                type string
               }
             }
           }
