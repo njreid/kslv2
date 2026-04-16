@@ -16,4 +16,9 @@
 - [x] Align example schemas with `doc:*` annotations.
 - [x] Add a TwiML Voice-inspired KSL example schema.
 - [x] Add quotation-mark guidance to the spec and simplify document layout to root docs plus `examples/`.
+- [x] Define canonical surface forms for major schema constructs.
+- [x] Add a compact grammar sketch and Tree-sitter implementation notes.
+- [x] Draft a normalized internal AST specification.
+- [x] Draft a Tree-sitter parse-shape appendix.
+- [x] Draft a separate well-formedness rules document with inter-doc links.
 - [x] Record documentation-only verification status in `TESTING.md`.

@@ -5,7 +5,7 @@
 schema "https://example.com/schemas/service" version="1.0.0" {
   info title="Service Config" description="Generic example for the improved KSL surface syntax"
 
-  define hostname {
+  define "hostname" {
     value {
       type string
       format hostname
@@ -13,7 +13,7 @@ schema "https://example.com/schemas/service" version="1.0.0" {
     }
   }
 
-  define port {
+  define "port" {
     value {
       type integer
       between 1 65535
@@ -22,38 +22,38 @@ schema "https://example.com/schemas/service" version="1.0.0" {
   }
 
   document {
-    node service required {
+    node "service" required {
       doc:summary "Root service configuration"
 
-      prop name required {
+      prop "name" required {
         type string
         min-length 1
         doc:summary "Stable service name"
       }
 
-      prop mode required {
+      prop "mode" required {
         type string
         enum tcp unix
         doc:summary "Connection mode"
       }
 
       if {
-        prop mode {
+        prop "mode" {
           const tcp
         }
       }
       then {
-        prop host required ref=hostname
-        prop port required ref=port
+        prop "host" required ref="hostname"
+        prop "port" required ref="port"
       }
       else {
-        prop socket required {
+        prop "socket" required {
           type string
         }
       }
 
       children closed {
-        node env many {
+        node "env" many {
           doc:summary "Environment variable assignment"
           arg 0 {
             type string
@@ -65,18 +65,18 @@ schema "https://example.com/schemas/service" version="1.0.0" {
           }
         }
 
-        node tls optional {
+        node "tls" optional {
           doc:summary "TLS material for secure listeners"
           dependent-required child="cert" requires-children="key"
           dependent-required child="key" requires-children="cert"
 
           children closed {
-            node cert required {
+            node "cert" required {
               arg 0 {
                 type string
               }
             }
-            node key required {
+            node "key" required {
               arg 0 {
                 type string
               }

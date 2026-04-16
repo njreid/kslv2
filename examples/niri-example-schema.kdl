@@ -5,13 +5,13 @@
 schema "https://example.com/schemas/niri-config" version="0.1.0" {
   info title="Niri Config Schema" description="Illustrative schema for common Niri configuration sections"
 
-  define bool-flag-node {
-    node flag {
+  define "bool-flag-node" {
+    node "flag" {
       doc:summary "Reusable marker for flag-like child nodes that are enabled by presence"
     }
   }
 
-  define key-chord {
+  define "key-chord" {
     value {
       type string
       min-length 1
@@ -20,7 +20,7 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
     }
   }
 
-  define percent-string {
+  define "percent-string" {
     value {
       type string
       pattern #"^[0-9]+%$"#
@@ -29,35 +29,35 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
     }
   }
 
-  define command-args {
+  define "command-args" {
     children closed {
-      node spawn optional {
+      node "spawn" optional {
         doc:summary "Launch a program directly"
         args at-least=1 {
           type string
         }
       }
 
-      node spawn-sh optional {
+      node "spawn-sh" optional {
         doc:summary "Launch a shell command via sh -c"
         arg 0 {
           type string
         }
       }
 
-      node quit optional {
+      node "quit" optional {
         doc:summary "Quit Niri"
       }
 
-      node close-window optional {
+      node "close-window" optional {
         doc:summary "Close the focused window"
       }
 
-      node fullscreen-window optional {
+      node "fullscreen-window" optional {
         doc:summary "Toggle fullscreen on the focused window"
       }
 
-      node maximize-window-to-edges optional {
+      node "maximize-window-to-edges" optional {
         doc:summary "Maximize the focused window to the monitor edges"
       }
     }
@@ -66,94 +66,94 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
   document {
     doc:summary "Top-level Niri config file"
 
-    node input optional {
+    node "input" optional {
       doc:summary "Input device and focus behavior settings"
       children closed {
-        node keyboard optional {
+        node "keyboard" optional {
           doc:summary "Keyboard-related configuration"
           children closed {
-            node xkb optional {
+            node "xkb" optional {
               doc:summary "XKB rules, model, layout, variant, and options"
               props closed
-              prop rules optional {
+              prop "rules" optional {
                 type string
               }
-              prop model optional {
+              prop "model" optional {
                 type string
               }
-              prop layout optional {
+              prop "layout" optional {
                 type string
               }
-              prop variant optional {
+              prop "variant" optional {
                 type string
               }
-              prop options optional {
+              prop "options" optional {
                 type string
               }
             }
 
-            node numlock optional {
+            node "numlock" optional {
               doc:summary "Enable numlock on startup"
             }
           }
         }
 
-        node touchpad optional {
+        node "touchpad" optional {
           doc:summary "Touchpad libinput settings"
           children closed {
-            node off optional { doc:summary "Disable the touchpad" }
-            node tap optional { doc:summary "Enable tap-to-click" }
-            node dwt optional { doc:summary "Disable while typing" }
-            node dwtp optional { doc:summary "Disable while trackpoint in use" }
-            node drag optional {
+            node "off" optional { doc:summary "Disable the touchpad" }
+            node "tap" optional { doc:summary "Enable tap-to-click" }
+            node "dwt" optional { doc:summary "Disable while typing" }
+            node "dwtp" optional { doc:summary "Disable while trackpoint in use" }
+            node "drag" optional {
               doc:summary "Toggle drag after tap"
               arg 0 {
                 type boolean
               }
             }
-            node drag-lock optional { doc:summary "Keep dragging active after release" }
-            node natural-scroll optional { doc:summary "Use natural scrolling" }
-            node accel-speed optional {
+            node "drag-lock" optional { doc:summary "Keep dragging active after release" }
+            node "natural-scroll" optional { doc:summary "Use natural scrolling" }
+            node "accel-speed" optional {
               arg 0 {
                 type number
               }
               doc:summary "Pointer acceleration speed"
             }
-            node accel-profile optional {
+            node "accel-profile" optional {
               arg 0 {
                 type string
                 enum adaptive flat
               }
             }
-            node scroll-method optional {
+            node "scroll-method" optional {
               arg 0 {
                 type string
                 enum two-finger edge no-scroll on-button-down
               }
             }
-            node disabled-on-external-mouse optional {
+            node "disabled-on-external-mouse" optional {
               doc:summary "Disable touchpad when an external mouse is present"
             }
           }
         }
 
-        node mouse optional {
+        node "mouse" optional {
           doc:summary "Mouse libinput settings"
           children closed {
-            node off optional
-            node natural-scroll optional
-            node accel-speed optional {
+            node "off" optional
+            node "natural-scroll" optional
+            node "accel-speed" optional {
               arg 0 {
                 type number
               }
             }
-            node accel-profile optional {
+            node "accel-profile" optional {
               arg 0 {
                 type string
                 enum adaptive flat
               }
             }
-            node scroll-method optional {
+            node "scroll-method" optional {
               arg 0 {
                 type string
                 enum no-scroll on-button-down
@@ -162,52 +162,52 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
           }
         }
 
-        node trackpoint optional {
+        node "trackpoint" optional {
           doc:summary "Trackpoint settings"
           children closed {
-            node off optional
-            node natural-scroll optional
-            node accel-speed optional {
+            node "off" optional
+            node "natural-scroll" optional
+            node "accel-speed" optional {
               arg 0 {
                 type number
               }
             }
-            node accel-profile optional {
+            node "accel-profile" optional {
               arg 0 {
                 type string
                 enum adaptive flat
               }
             }
-            node scroll-method optional {
+            node "scroll-method" optional {
               arg 0 {
                 type string
                 enum on-button-down no-scroll
               }
             }
-            node scroll-button optional {
+            node "scroll-button" optional {
               arg 0 {
                 type integer
                 min 0
               }
             }
-            node scroll-button-lock optional
-            node middle-emulation optional
+            node "scroll-button-lock" optional
+            node "middle-emulation" optional
           }
         }
 
-        node warp-mouse-to-focus optional {
+        node "warp-mouse-to-focus" optional {
           doc:summary "Warp the pointer to newly focused windows"
         }
 
-        node focus-follows-mouse optional {
+        node "focus-follows-mouse" optional {
           doc:summary "Focus windows and outputs when the pointer enters them"
           props closed
-          prop max-scroll-amount optional ref=percent-string
+          prop "max-scroll-amount" optional ref="percent-string"
         }
       }
     }
 
-    node output many {
+    node "output" many {
       doc:summary "Per-output settings keyed by output name"
       arg 0 {
         type string
@@ -215,34 +215,34 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
         doc:summary "Output name such as eDP-1 or HDMI-A-1"
       }
       children closed {
-        node off optional {
+        node "off" optional {
           doc:summary "Disable this output"
         }
-        node mode optional {
+        node "mode" optional {
           arg 0 {
             type string
             pattern #"^[0-9]+x[0-9]+(@[0-9.]+)?$"#
             doc:summary "Display mode string like 1920x1080 or 1920x1080@120.030"
           }
         }
-        node scale optional {
+        node "scale" optional {
           arg 0 {
             type number
             min 0.1
           }
         }
-        node transform optional {
+        node "transform" optional {
           arg 0 {
             type string
             enum normal 90 180 270 flipped flipped-90 flipped-180 flipped-270
           }
         }
-        node position optional {
+        node "position" optional {
           props closed
-          prop x required {
+          prop "x" required {
             type integer
           }
-          prop y required {
+          prop "y" required {
             type integer
           }
           doc:summary "Logical output position in the global coordinate space"
@@ -250,28 +250,28 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
       }
     }
 
-    node layout optional {
+    node "layout" optional {
       doc:summary "Global layout behavior"
       children closed {
-        node gaps optional {
+        node "gaps" optional {
           arg 0 {
             type integer
             min 0
           }
         }
-        node center-focused-column optional {
+        node "center-focused-column" optional {
           doc:summary "Center the active column"
         }
-        node preset-column-widths optional {
+        node "preset-column-widths" optional {
           doc:summary "Preferred widths for new columns"
           children closed {
-            node proportion many {
+            node "proportion" many {
               arg 0 {
                 type number
                 min 0
               }
             }
-            node fixed many {
+            node "fixed" many {
               arg 0 {
                 type integer
                 min 1
@@ -282,10 +282,10 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
       }
     }
 
-    node binds optional {
+    node "binds" optional {
       doc:summary "Keyboard shortcuts and associated actions"
       children closed {
-        node bind many {
+        node "bind" many {
           doc:summary "One keybinding declaration"
           args at-least=1 {
             type string
@@ -293,37 +293,37 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
             highlight token="keybinding"
           }
           props open
-          prop allow-when-locked optional {
+          prop "allow-when-locked" optional {
             type boolean
           }
-          prop hotkey-overlay-title optional {
+          prop "hotkey-overlay-title" optional {
             type string
           }
           children open {
-            ref command-args
+            ref "command-args"
           }
           assert `countChild("spawn") + countChild("spawn-sh") + countChild("quit") + countChild("close-window") + countChild("fullscreen-window") + countChild("maximize-window-to-edges") >= 1`
         }
       }
     }
 
-    node window-rule many {
+    node "window-rule" many {
       doc:summary "Match-specific rules applied to windows"
       props open
-      prop matches optional {
+      prop "matches" optional {
         type string
         doc:summary "Matcher expression or shorthand"
       }
       children open {
-        node open-on-output optional {
+        node "open-on-output" optional {
           arg 0 {
             type string
           }
         }
-        node open-maximized optional
-        node open-fullscreen optional
-        node draw-border-with-background optional
-        node opacity optional {
+        node "open-maximized" optional
+        node "open-fullscreen" optional
+        node "draw-border-with-background" optional
+        node "opacity" optional {
           arg 0 {
             type number
             min 0
@@ -333,22 +333,22 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
       }
     }
 
-    node animations optional {
+    node "animations" optional {
       doc:summary "Animation and timing controls"
       children open {
-        node workspace-switch optional {
+        node "workspace-switch" optional {
           doc:summary "Workspace switching animation"
         }
-        node window-open optional {
+        node "window-open" optional {
           doc:summary "Window opening animation"
         }
-        node window-close optional {
+        node "window-close" optional {
           doc:summary "Window closing animation"
         }
       }
     }
 
-    node include many {
+    node "include" many {
       doc:summary "Include another KDL file"
       arg 0 {
         type string

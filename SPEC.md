@@ -4,6 +4,13 @@
 
 This document is a normative-style draft for a revised KDL Schema Language.
 
+Related documents:
+
+- [`DESIGN.md`](./DESIGN.md) for rationale and non-normative design guidance
+- [`AST.md`](./AST.md) for the normalized internal model
+- [`TREE_SITTER.md`](./TREE_SITTER.md) for CST-oriented parser guidance
+- [`WELL_FORMEDNESS.md`](./WELL_FORMEDNESS.md) for schema validity rules
+
 ## 1. Syntax Profile
 
 This draft assumes KDL v2 syntax for the schema language, with one explicit extension:
@@ -19,7 +26,14 @@ All examples in this draft are otherwise intended to be KDL v2-compatible.
 
 ## 2. When to Use Quotation Marks
 
-KSL SHOULD minimize quotation marks when a value is representable as an identifier string in KDL v2.
+KSL SHOULD use quotation marks to introduce schema-defined names, even when those names are representable as identifier strings in KDL v2.
+
+Quotation marks SHOULD be used for:
+
+- definition names such as `define "port"`
+- node names such as `node "Response"`
+- property names such as `prop "host"`
+- references to named schema components such as `ref="port"` and `ref="common:hostname"`
 
 Quotation marks SHOULD NOT be used for canonical symbolic values when the value consists only of identifier-safe characters.
 
@@ -27,9 +41,8 @@ Common cases that SHOULD remain unquoted include:
 
 - scalar type names such as `string`, `integer`, `number`, `boolean`, and `null`
 - enum members and constant-like symbols such as `tcp`, `unix`, `GET`, and `POST`
-- schema definition names and references such as `port` and `common:hostname`
-- node names and property names such as `Response`, `Say`, `host`, and `default_shell`
-- namespaced annotation or extension nodes such as `doc:summary` and `ibm:annotation`
+- format names such as `hostname` and `path`
+- namespaced annotation or extension node identifiers such as `doc:summary` and `ibm:annotation`
 
 Quotation marks SHOULD be used when the value:
 
@@ -44,15 +57,15 @@ Examples:
 ```kdl
 type string
 enum tcp unix
-prop host ref=common:hostname
-node Response required
+prop "host" ref="common:hostname"
+node "Response" required
 doc:summary "Required root element"
 import "https://example.com/schemas/common" as="common"
 pattern #"^[0-9]+%$"#
 ```
 
 > Style:
-> Prefer unquoted symbolic identifiers and quoted content strings. This keeps the language visually smaller and better aligned with the principle of one obvious way to express each concept.
+> Quote names being declared or referenced. Leave canonical value symbols unquoted. This keeps member names visually distinct from qualifiers and constraint values.
 
 ## 3. Core Principles
 
@@ -64,7 +77,128 @@ KSL implementations and specifications MUST follow these principles:
 - built-in validation vocabulary unqualified by namespace
 - extension vocabulary expressed through `prefix:name`
 
-## 4. Top-Level Structure
+## 4. Canonical Surface Forms
+
+KSL SHOULD define one canonical surface spelling for each major concept.
+
+Conforming examples and style guidance SHOULD prefer the canonical forms below.
+
+### 4.1 Name-Bearing Declarations
+
+When introducing or matching a schema-defined concept by name, KSL SHOULD use a quoted string argument.
+
+Canonical forms:
+
+- `define "name" { ... }`
+- `node "name" ...`
+- `prop "name" ...`
+
+Examples:
+
+```kdl
+define "port" {
+  value {
+    type integer
+  }
+}
+
+node "Response" required
+prop "host" optional {
+  type string
+}
+```
+
+### 4.2 Canonical Symbolic Values
+
+When expressing canonical symbolic values, KSL SHOULD use unquoted argument values.
+
+Canonical forms:
+
+- `type string`
+- `format hostname`
+- `enum tcp unix`
+- `const tcp`
+
+Examples:
+
+```kdl
+type string
+format hostname
+enum tcp unix
+const tcp
+```
+
+### 4.3 References
+
+References to named schema components SHOULD use the `ref` property form.
+
+Canonical form:
+
+- `ref="name"`
+- `ref="prefix:name"`
+
+Examples:
+
+```kdl
+prop "host" ref="common:hostname"
+node "bind" many ref="keybinding"
+```
+
+Alternate spellings such as `ref name` SHOULD NOT be part of the canonical surface.
+
+### 4.4 Literal Defaults
+
+Literal defaults SHOULD use the `default=<literal>` property form on the declaration they modify.
+
+Examples:
+
+```kdl
+prop "theme" optional default=dark {
+  type string
+}
+
+prop "retries" optional default=3 {
+  type integer
+}
+```
+
+### 4.5 Computed Defaults
+
+Computed defaults SHOULD use a dedicated `default` child node whose argument is a CEL expression.
+
+Example:
+
+```kdl
+default `props.kind == "workspace" ? "main" : null`
+```
+
+This distinction avoids overloading one syntax form with both literal values and computed expressions.
+
+### 4.6 Imports
+
+Imports SHOULD use:
+
+- a quoted schema identifier as the first argument
+- an `as` property for the namespace prefix
+
+Canonical form:
+
+```kdl
+import "https://example.com/schemas/common" as="common"
+```
+
+### 4.7 Constraint Shape
+
+To minimize surface area, KSL SHOULD prefer:
+
+- child nodes for validation keywords such as `type`, `enum`, `const`, `format`, `min`, `max`, and `pattern`
+- properties for metadata-like modifiers attached to the declaration header such as `ref=...` and literal `default=...`
+- trailing occurrence modifiers such as `required`, `optional`, `many`, `at-least`, `at-most`, and `between`
+
+> Style:
+> Quote names. Leave canonical value symbols unquoted. Use child nodes for validation constraints and properties for header-level modifiers.
+
+## 5. Top-Level Structure
 
 A KSL document MUST contain exactly one top-level `schema` node.
 
@@ -83,7 +217,7 @@ schema "https://example.com/schemas/service" version="1.0.0" {
 }
 ```
 
-## 5. Normalization Model
+## 6. Normalization Model
 
 Every conforming implementation MUST normalize the user-facing syntax into a canonical internal schema model before validation or tooling analysis.
 
@@ -106,7 +240,7 @@ The normalized model MUST NOT require a separate user-facing syntax.
 > Implementation:
 > The normalization requirement is about implementation interoperability, not about exposing a second authoring language.
 
-## 6. Namespaces and Imports
+## 7. Namespaces and Imports
 
 KSL MUST use `prefix:name` as its namespace and extension convention.
 
@@ -120,7 +254,7 @@ Example:
 
 ```kdl
 import "https://example.com/schemas/common" as="common"
-prop host ref=common:hostname
+prop "host" ref="common:hostname"
 ibm:annotation severity="warning"
 ```
 
@@ -131,7 +265,7 @@ Import rules:
 - import cycles are invalid
 - import resolution MUST be deterministic within a conformance profile
 
-## 7. Subjects
+## 8. Subjects
 
 Each schema block validates or annotates one logical subject.
 
@@ -148,7 +282,7 @@ Standard subjects are:
 
 Constraints declared within a subject MUST apply to that subject unless otherwise specified.
 
-## 8. Cardinality
+## 9. Cardinality
 
 KSL MUST support the following concise occurrence markers:
 
@@ -164,14 +298,14 @@ These markers MUST normalize to occurrence bounds internally.
 Example:
 
 ```kdl
-node plugin many
-prop theme optional {
+node "plugin" many
+prop "theme" optional {
   type string
 }
-node workspace between 1 4
+node "workspace" between 1 4
 ```
 
-## 9. Scalar Types and Constraints
+## 10. Scalar Types and Constraints
 
 KSL MUST support the following base scalar types:
 
@@ -199,7 +333,7 @@ The following scalar constraints SHOULD be supported where applicable:
 
 An implementation MUST reject incompatible constraints unless the specification for that constraint explicitly allows cross-type use.
 
-## 10. Arguments
+## 11. Arguments
 
 Because KDL arguments are ordered, KSL MUST treat positional arguments as indexed slots.
 
@@ -216,7 +350,7 @@ The `args` form:
 Example:
 
 ```kdl
-node listen {
+node "listen" {
   arg 0 {
     type string
     format hostname
@@ -228,7 +362,7 @@ node listen {
 }
 ```
 
-## 11. Properties
+## 12. Properties
 
 The `prop` form declares a schema for one named property.
 
@@ -247,7 +381,7 @@ The `props` form declares constraints on the property map as a whole.
 
 `props` SHOULD support property-name constraints.
 
-## 12. Child Content Models
+## 13. Child Content Models
 
 KSL MUST support child-content modeling that accounts for ordered child nodes.
 
@@ -259,7 +393,7 @@ To minimize surface area, KSL SHOULD use only the following child-content forms:
 
 The `unordered` keyword SHOULD NOT be part of the core language.
 
-### 12.1 Bare `children`
+### 13.1 Bare `children`
 
 A bare `children { ... }` block MUST be interpreted as an unordered content model.
 
@@ -268,13 +402,13 @@ In a bare `children` block:
 - direct `node ...` declarations specify name-based occurrence constraints
 - matching is by child node name and occurrence, not relative order
 
-### 12.2 `sequence`
+### 13.2 `sequence`
 
 A `sequence { ... }` block MUST be interpreted as an ordered content model.
 
 Within `sequence`, items MUST be matched left-to-right against the child-node stream.
 
-### 12.3 `choice`
+### 13.3 `choice`
 
 A `choice { ... }` block MUST require exactly one branch to match.
 
@@ -285,14 +419,14 @@ Example:
 ```kdl
 children closed {
   sequence {
-    node name required
-    node command required
-    node env many
+    node "name" required
+    node "command" required
+    node "env" many
   }
 }
 ```
 
-## 13. Open and Closed Content
+## 14. Open and Closed Content
 
 For explicit schemas, a conformance profile SHOULD default to closed-world behavior for:
 
@@ -305,30 +439,30 @@ Profiles with different defaults MUST document them precisely.
 > Style:
 > Prefer explicit open extension islands instead of making whole documents permissive.
 
-## 14. Definitions and References
+## 15. Definitions and References
 
 KSL MUST support reusable named definitions.
 
 The `define` form binds a name to a schema fragment.
 
-The `ref` property or equivalent reference form applies a named schema fragment.
+The `ref` property applies a named schema fragment.
 
 Example:
 
 ```kdl
-define port {
+define "port" {
   value {
     type integer
     between 1 65535
   }
 }
 
-prop listen-port ref=port
+prop "listen-port" ref="port"
 ```
 
 Implementations SHOULD resolve local definitions before imported ones when both scopes are available.
 
-## 15. Composition
+## 16. Composition
 
 KSL MUST support the following composition forms:
 
@@ -346,28 +480,28 @@ Semantics:
 
 Implementations SHOULD provide branch-aware diagnostics for composition failures.
 
-## 16. Declarative Conditionals
+## 17. Declarative Conditionals
 
 KSL SHOULD support declarative conditionals modeled after JSON Schema.
 
-### 16.1 `if` / `then` / `else`
+### 17.1 `if` / `then` / `else`
 
 - If the `if` subschema succeeds, the `then` subschema MUST apply if present.
 - If the `if` subschema fails, the `else` subschema MUST apply if present.
 
-### 16.2 `dependent-required`
+### 17.2 `dependent-required`
 
 KSL SHOULD support dependencies that require additional members when one member is present.
 
 This mechanism MUST be applicable to both properties and child nodes.
 
-### 16.3 `dependent-schema`
+### 17.3 `dependent-schema`
 
 KSL SHOULD support dependencies that apply a subschema when a member is present.
 
 The dependent subschema MUST apply independently of the base schema.
 
-## 17. Declarative Rules Versus CEL
+## 18. Declarative Rules Versus CEL
 
 KSL SHOULD express constraints declaratively whenever practical.
 
@@ -410,7 +544,7 @@ default `props.kind == "workspace" ? "main" : null`
 visible-if `props.mode == "advanced"`
 ```
 
-## 18. Assertions and Annotations
+## 19. Assertions and Annotations
 
 KSL MUST distinguish assertions from annotations semantically.
 
@@ -429,7 +563,7 @@ Recommended built-in annotation categories include:
 
 Documentation annotations SHOULD use the reserved `doc:` namespace.
 
-## 19. Documentation Annotations
+## 20. Documentation Annotations
 
 KSL SHOULD support structured documentation annotations.
 
@@ -449,7 +583,7 @@ Recommended forms:
 Example:
 
 ```kdl
-prop voice {
+prop "voice" {
   type string
   doc:summary "Voice identifier"
   doc:warning "Available voices may change by provider"
@@ -460,7 +594,79 @@ prop voice {
 > Style:
 > Using `doc:*` keeps the unqualified keyword set smaller and makes documentation nodes easier to identify and ignore where appropriate.
 
-## 20. Node Archetypes
+## 21. Grammar Sketch
+
+The following sketch is informative and is intended to pin down the canonical surface shape of the language.
+
+```text
+schema-document := schema-node
+
+schema-node := 'schema' string [properties] block
+
+schema-child :=
+  info-node |
+  import-node |
+  define-node |
+  document-node
+
+import-node := 'import' string 'as' '=' string
+define-node := 'define' string block
+document-node := 'document' [header-modifier*] block
+
+subject-node :=
+  node-subject |
+  prop-subject |
+  arg-subject |
+  args-subject |
+  value-subject |
+  props-subject |
+  children-subject
+
+node-subject := 'node' string [occurrence] [header-property*] [block]
+prop-subject := 'prop' string [occurrence] [header-property*] [block]
+arg-subject := 'arg' integer [occurrence] [header-property*] [block]
+args-subject := 'args' [occurrence-or-list-property*] [block]
+
+header-property := 'ref' '=' string | 'default' '=' literal
+occurrence := 'required' | 'optional' | 'many' | 'at-least' integer | 'at-most' integer | 'between' integer integer
+
+constraint-node :=
+  type-node |
+  format-node |
+  enum-node |
+  const-node |
+  min-node |
+  max-node |
+  pattern-node |
+  composition-node |
+  conditional-node |
+  annotation-node
+
+type-node := 'type' symbol
+format-node := 'format' symbol
+enum-node := 'enum' symbol+
+const-node := 'const' symbol
+
+children-subject := 'children' ('open' | 'closed')? block
+children-item := node-subject | sequence-node | choice-node | ref-node
+sequence-node := 'sequence' block
+choice-node := 'choice' block
+
+ref-node := 'ref' string
+
+annotation-node := built-in-annotation | qualified-annotation
+built-in-annotation := hint-node | highlight-node | bind-node
+qualified-annotation := identifier-with-colon [args/properties/block]
+```
+
+This grammar sketch is not a complete parser grammar. In particular, it does not attempt to encode:
+
+- semantic validation of refs and imports
+- ambiguity detection for `choice`
+- CEL expression internals
+- interaction between composition and content-model matching
+
+## 22. Node Archetypes
 
 The specification SHOULD describe common KDL node archetypes for documentation and tooling purposes, without introducing new syntax.
 
@@ -474,7 +680,31 @@ Recommended archetypes:
 
 These archetypes SHOULD remain descriptive and non-normative.
 
-## 21. Post-Validation Model
+## 23. Tree-sitter Considerations
+
+Tree-sitter is a good fit for the concrete KSL surface grammar.
+
+A Tree-sitter grammar SHOULD be able to represent at least:
+
+- top-level schema structure
+- definition, import, and document nodes
+- subject-node headers such as `node "name" required ref="foo"`
+- child blocks including `children`, `sequence`, and `choice`
+- built-in annotations and qualified extension nodes such as `doc:summary`
+- backtick CEL literals as opaque tokens or strings in the CEL extension profile
+
+Tree-sitter SHOULD NOT be expected to enforce semantic rules such as:
+
+- ref resolution
+- import cycle rejection
+- content-model ambiguity
+- composition semantics
+- CEL typechecking or execution
+
+> Implementation:
+> A practical implementation would use Tree-sitter for incremental parsing, selections, folding, and structural queries, and then run a separate semantic pass over the parsed tree to build the normalized schema model and validate it.
+
+## 24. Post-Validation Model
 
 An implementation SHOULD define a post-validation information model in addition to pass/fail validation results.
 
@@ -489,7 +719,7 @@ The post-validation model SHOULD be able to expose:
 
 This model SHOULD be defined over the normalized schema representation.
 
-## 22. Validation Results
+## 25. Validation Results
 
 An implementation SHOULD report validation failures with enough information for editor integration.
 
@@ -501,7 +731,7 @@ Each failure SHOULD include:
 - human-readable message
 - branch detail for composition failures when available
 
-## 23. JSON Schema Alignment
+## 26. JSON Schema Alignment
 
 KSL SHOULD align with JSON Schema where the semantic model is equivalent or near-equivalent.
 
@@ -524,7 +754,7 @@ KDL-specific adaptations include:
 - indexed `arg` declarations for positional arguments
 - child-content models for ordered node collections
 
-## 24. Spec Structure
+## 27. Spec Structure
 
 The eventual specification SHOULD separate:
 
@@ -536,7 +766,7 @@ The eventual specification SHOULD separate:
 6. style guidance
 7. implementation notes
 
-## 25. Profiles and Conformance
+## 28. Profiles and Conformance
 
 The specification SHOULD allow conformance profiles.
 

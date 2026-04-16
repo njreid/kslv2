@@ -56,19 +56,19 @@ schema "https://example.com/schemas/app-config" version="0.3.0" {
 
   import "https://example.com/schemas/common" as="common"
 
-  define color {
+  define "color" {
     value {
       type string
       enum red green blue
     }
   }
 
-  define keybinding {
-    node bind {
+  define "keybinding" {
+    node "bind" {
       arg 0 {
         type string
       }
-      prop action required {
+      prop "action" required {
         type string
       }
       doc:summary "A binding from a key chord to an action"
@@ -76,10 +76,10 @@ schema "https://example.com/schemas/app-config" version="0.3.0" {
   }
 
   document {
-    node app required {
-      prop theme ref=color default=red
+    node "app" required {
+      prop "theme" ref="color" default=red
       children closed {
-        node bind many ref=keybinding
+        node "bind" many ref="keybinding"
       }
     }
   }
@@ -111,6 +111,41 @@ The normalized AST should represent:
 
 The user-facing syntax should prefer one spelling per concept.
 
+### Canonical forms
+
+The language should standardize the following surface choices:
+
+- quote names when declaring or matching schema-defined concepts
+- leave canonical value symbols unquoted
+- use `ref="name"` for references
+- use literal `default=...` on the declaration header for literal defaults
+- use `default <CEL>` as a child node for computed defaults
+- use child nodes such as `type`, `format`, `enum`, `const`, `min`, and `max` for validation constraints
+
+Examples:
+
+```kdl
+define "keybinding" {
+  node "bind" {
+    prop "action" required {
+      type string
+    }
+  }
+}
+
+prop "theme" optional default=dark {
+  type string
+}
+
+prop "host" ref="common:hostname"
+default `props.kind == "workspace" ? "main" : null`
+```
+
+This gives KSL a clearer visual split:
+
+- quoted names identify concepts and references
+- unquoted symbols identify canonical values
+
 ### Cardinality
 
 Common occurrence counts use concise modifiers:
@@ -125,10 +160,10 @@ Common occurrence counts use concise modifiers:
 Examples:
 
 ```kdl
-node server required
-node plugin many
-node workspace between 1 4
-prop theme optional {
+node "server" required
+node "plugin" many
+node "workspace" between 1 4
+prop "theme" optional {
   type string
 }
 ```
@@ -138,7 +173,7 @@ prop theme optional {
 Arguments are indexed explicitly:
 
 ```kdl
-node listen {
+node "listen" {
   arg 0 {
     type string
     format hostname
@@ -153,7 +188,7 @@ node listen {
 Repeated homogeneous arguments use `args`:
 
 ```kdl
-node include {
+node "include" {
   args at-least=1 {
     type string
   }
@@ -165,16 +200,16 @@ node include {
 Properties are declared inline:
 
 ```kdl
-node window {
-  prop width {
+node "window" {
+  prop "width" {
     type integer
     min 1
   }
-  prop height {
+  prop "height" {
     type integer
     min 1
   }
-  prop title optional {
+  prop "title" optional {
     type string
   }
 }
@@ -223,8 +258,8 @@ Example:
 
 ```kdl
 children closed {
-  node name required
-  node env many
+  node "name" required
+  node "env" many
 }
 ```
 
@@ -233,9 +268,9 @@ This means unordered matching by child name and occurrence.
 ```kdl
 children closed {
   sequence {
-    node name required
-    node command required
-    node env many
+    node "name" required
+    node "command" required
+    node "env" many
   }
 }
 ```
@@ -245,8 +280,8 @@ This means order-sensitive matching.
 ```kdl
 children closed {
   choice {
-    node tcp
-    node unix
+    node "tcp"
+    node "unix"
   }
 }
 ```
@@ -265,6 +300,29 @@ Recommended rule:
 
 > Implementation:
 > This does not require a large new surface syntax. It does require validators to normalize children blocks into a real content-model graph and to detect obvious ambiguous `choice` constructions.
+
+## Grammar and Parsers
+
+The next draft should include a compact grammar sketch for the canonical surface syntax.
+
+Tree-sitter is a strong fit for KSL’s concrete syntax because it can cover:
+
+- the KDL-based block structure
+- declaration headers such as `node "bind" many ref="keybinding"`
+- child-model forms such as `children`, `sequence`, and `choice`
+- namespaced annotations such as `doc:summary`
+- CEL literals as opaque extension tokens
+
+Tree-sitter is not enough on its own for the language semantics. It will not decide:
+
+- whether refs resolve
+- whether imports cycle
+- whether a `choice` is ambiguous
+- whether composition branches interact correctly
+- whether CEL is well-typed or valid
+
+> Implementation:
+> Tree-sitter should parse the surface language. A separate semantic phase should normalize the parsed tree into the internal schema model and perform validation.
 
 ## Open, Closed, and Compatibility
 
@@ -308,7 +366,7 @@ Imported definitions should use the import label as the namespace prefix.
 ```kdl
 import "https://example.com/schemas/common" as="common"
 
-prop host ref=common:hostname
+prop "host" ref="common:hostname"
 ```
 
 Rules:
@@ -434,7 +492,7 @@ Recommended documentation affordances:
 Example:
 
 ```kdl
-prop voice {
+prop "voice" {
   type string
   doc:summary "Voice identifier"
   doc:warning "Available voices may change by provider"
@@ -503,7 +561,7 @@ Defer unless needed:
 Named definitions should remain the primary reuse mechanism.
 
 ```kdl
-define port {
+define "port" {
   value {
     type integer
     between 1 65535
@@ -516,7 +574,7 @@ Imports should remain explicit and prefixed:
 ```kdl
 import "https://example.com/schemas/common" as="common"
 
-prop host ref=common:hostname
+prop "host" ref="common:hostname"
 ```
 
 ## Document Structure for the Spec

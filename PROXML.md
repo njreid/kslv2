@@ -29,11 +29,11 @@ An XML architect would expect KSL to first define a canonical schema infoset or 
 For example, these should be defined as equivalent after normalization:
 
 ```kdl
-node plugin many
+node "plugin" many
 ```
 
 ```kdl
-node plugin {
+node "plugin" {
   occurs min=0 max="unbounded"
 }
 ```
@@ -56,7 +56,7 @@ The KSL plan correctly notices that KDL child nodes are ordered and that JSON Sc
 
 The missing questions are the important ones:
 
-- Is `children closed { node a optional; node b optional }` ordered or unordered by default?
+- Is `children closed { node "a" optional; node "b" optional }` ordered or unordered by default?
 - If both `sequence` and top-level child declarations exist, how are they combined?
 - Is `choice` exclusive by occurrence, branch, or whole region?
 - What are the determinism rules when multiple branches can match the same node name?
