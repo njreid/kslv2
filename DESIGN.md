@@ -23,10 +23,11 @@ Standard KDL v2 does not define backticks as string delimiters. Everything else 
 
 ## Problem
 
-KDL Schema v1 proved that a schema language embedded in KDL is viable, but it is verbose and awkward to author. The current KSL v2 draft moves toward a better model, especially by borrowing from JSON Schema, but it is still incomplete and still spends too much language surface on author-facing mechanics.
+KDL Schema v1 proved that a schema language embedded in KDL is viable, but it is verbose and some may find it a bit awkward to author. The current KSL v2 draft moves toward a better model, especially by borrowing from JSON Schema, but it is still incomplete and still spends too much language surface on author-facing mechanics.
 
 The next design should optimize for:
 
+- lean readability
 - concise authoring
 - strong normalization for tooling
 - predictable cross-implementation semantics
