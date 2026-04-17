@@ -239,6 +239,7 @@ To minimize surface area, KSL MUST use:
 
 - child nodes for validation keywords such as `type`, `enum`, `const`, `format`, `min`, `max`, and `pattern`
 - properties for metadata-like modifiers attached to the declaration header such as `ref=...`, `doc=...`, and literal `default=...`
+- properties for metadata-like modifiers attached to the declaration header such as `ref=...`, `doc=...`, `when=...`, and literal `default=...`
 - trailing occurrence modifiers such as `required`, `optional`, `many`, `at-least`, `at-most`, and `between`
 
 > Style:
@@ -530,10 +531,39 @@ Implementations MUST provide branch-aware diagnostics for composition failures.
 
 KSL MUST support declarative conditionals modeled after JSON Schema.
 
+KSL SHOULD prefer declaration-local conditional activation over block-structured control flow.
+
+### 17.0 `when=`
+
+KSL SHOULD support a canonical `when=` header property for conditionally active declarations, constraints, and annotations.
+
+Recommended uses:
+
+- conditional properties
+- conditional child nodes
+- conditional defaults
+- conditional annotations such as `visible-if`
+
+Examples:
+
+```kdl
+prop "port" required when=`props.mode == "tcp"` {
+  type integer
+}
+
+prop "socket" required when=`props.mode != "tcp"` {
+  type string
+}
+```
+
+If `when=` is supported, implementations SHOULD treat it as the preferred canonical conditional form.
+
 ### 17.1 `if` / `then` / `else`
 
 - If the `if` subschema succeeds, the `then` subschema MUST apply if present.
 - If the `if` subschema fails, the `else` subschema MUST apply if present.
+
+If an implementation supports both `when=` and `if` / `then` / `else`, the implementation SHOULD normalize `if` / `then` / `else` into equivalent guarded constraints where possible.
 
 ### 17.2 `dependent-required`
 
@@ -589,6 +619,8 @@ assert `hasProp("min") == hasProp("max")`
 default `props.kind == "workspace" ? "main" : null`
 visible-if `props.mode == "advanced"`
 ```
+
+`when=` SHOULD be preferred over CEL-bearing control-flow structures when a declaration-local guard is sufficient.
 
 ## 19. Assertions and Annotations
 
