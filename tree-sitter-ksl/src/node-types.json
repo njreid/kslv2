@@ -24,6 +24,10 @@
           "named": true
         },
         {
+          "type": "identity",
+          "named": true
+        },
+        {
           "type": "integer",
           "named": true
         },
@@ -455,6 +459,10 @@
             "named": true
           },
           {
+            "type": "identity",
+            "named": true
+          },
+          {
             "type": "integer",
             "named": true
           },
@@ -501,7 +509,7 @@
         "required": true,
         "types": [
           {
-            "type": "string",
+            "type": "identity",
             "named": true
           }
         ]
@@ -551,7 +559,7 @@
         "required": true,
         "types": [
           {
-            "type": "string",
+            "type": "identity",
             "named": true
           }
         ]
@@ -644,6 +652,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "identity",
             "named": true
           },
           {
@@ -992,6 +1004,10 @@
             "named": true
           },
           {
+            "type": "identity",
+            "named": true
+          },
+          {
             "type": "integer",
             "named": true
           },
@@ -1087,6 +1103,10 @@
         },
         {
           "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "identity",
           "named": true
         },
         {
@@ -1565,6 +1585,10 @@
   },
   {
     "type": "identifier",
+    "named": true
+  },
+  {
+    "type": "identity",
     "named": true
   },
   {

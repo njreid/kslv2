@@ -44,6 +44,8 @@
 - Added `tests/golden/` fixtures for valid and invalid schema cases.
 - Replaced the fixture-shaped normalizer with a more general CST-to-AST lowering pass in `tools/ksl-lib.mjs`.
 - Expanded the Tree-sitter corpus to cover imports, composition/conditionals, and CEL-bearing annotations.
+- Added golden fixtures for `dependent-required`, `dependent-schema`, merge conflicts, and imported ref kind mismatches.
+- Refactored diagnostics generation to validate the normalized AST rather than only the raw parsed nodes.
 - Revised example schemas to use structured `doc:*` annotations.
 
 ## Syntax Verification Notes
@@ -54,7 +56,7 @@
 - `PROXML.md` is design critique only and does not introduce additional syntax.
 - `DESIGN.md` and `SPEC.md` now recommend `prefix:name` for extensions and imported definitions, with `doc:` as the structured documentation namespace.
 - `SPEC.md` now includes a dedicated section on when quotation marks should and should not be used.
-- `SPEC.md` now states that `ref="name"` is the canonical reference spelling and distinguishes literal defaults from computed CEL defaults.
+- `SPEC.md` now states that reusable schema handles use `#identity`, refs use `ref=#identity`, and literal defaults are distinct from computed CEL defaults.
 - `SPEC.md` and `WELL_FORMEDNESS.md` were tightened toward more normative language for canonical forms, structured docs, ambiguity rejection, and schema rejection behavior.
 - `AST.md` is implementation-facing and intentionally not user-facing syntax.
 - `REFERENCE_COMPATIBILITY.md` is a separate semantic-compatibility document focused specifically on `ref` use sites.
@@ -75,7 +77,7 @@
 - `node ./tools/golden-validate.mjs`
 - `npm --prefix ./tree-sitter-ksl run generate`
 - `npm --prefix ./tree-sitter-ksl run test`
-- The Tree-sitter scaffold currently passes its checked-in corpus tests, including refs, imports, conditionals, composition, and CEL annotation cases.
+- The Tree-sitter scaffold currently passes its checked-in corpus tests, including refs, imports, composition, conditionals, props, content refs, and CEL annotation cases.
 
 ## Planned
 

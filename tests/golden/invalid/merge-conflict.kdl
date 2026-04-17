@@ -1,0 +1,17 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/merge-conflict" version="0.1.0" {
+  define #hostname {
+    value {
+      type string
+    }
+  }
+
+  document {
+    node "service" required {
+      prop "port" required ref=#hostname {
+        type integer
+      }
+    }
+  }
+}

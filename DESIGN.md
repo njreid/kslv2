@@ -56,14 +56,14 @@ schema "https://example.com/schemas/app-config" version="0.3.0" {
 
   import "https://example.com/schemas/common" as="common"
 
-  define "color" {
+  define #color {
     value {
       type string
       enum red green blue
     }
   }
 
-  define "keybinding" {
+  define #keybinding {
     node "bind" {
       arg 0 {
         type string
@@ -77,9 +77,9 @@ schema "https://example.com/schemas/app-config" version="0.3.0" {
 
   document {
     node "app" required {
-      prop "theme" ref="color" default=red
+      prop "theme" ref=#color default=red
       children closed {
-        node "bind" many ref="keybinding"
+        node "bind" many ref=#keybinding
       }
     }
   }
@@ -115,9 +115,9 @@ The user-facing syntax should prefer one spelling per concept.
 
 The language should standardize the following surface choices:
 
-- quote names when declaring or matching schema-defined concepts
+- quote node and property names when declaring or matching document-language concepts
 - leave canonical value symbols unquoted
-- use `ref="name"` for references
+- use `#identity` for reusable schema handles and `ref=#identity` for references
 - use literal `default=...` on the declaration header for literal defaults
 - use `default <CEL>` as a child node for computed defaults
 - use child nodes such as `type`, `format`, `enum`, `const`, `min`, and `max` for validation constraints
@@ -125,7 +125,7 @@ The language should standardize the following surface choices:
 Examples:
 
 ```kdl
-define "keybinding" {
+define #keybinding {
   node "bind" {
     prop "action" required {
       type string
@@ -137,13 +137,14 @@ prop "theme" optional default=dark {
   type string
 }
 
-prop "host" ref="common:hostname"
+prop "host" ref=common:#hostname
 default `props.kind == "workspace" ? "main" : null`
 ```
 
 This gives KSL a clearer visual split:
 
-- quoted names identify concepts and references
+- quoted names identify document-language node and property names
+- `#identity` tokens identify reusable schema handles
 - unquoted symbols identify canonical values
 
 ### Cardinality
@@ -308,7 +309,7 @@ The next draft should include a compact grammar sketch for the canonical surface
 Tree-sitter is a strong fit for KSL’s concrete syntax because it can cover:
 
 - the KDL-based block structure
-- declaration headers such as `node "bind" many ref="keybinding"`
+- declaration headers such as `node "bind" many ref=#keybinding`
 - child-model forms such as `children`, `sequence`, and `choice`
 - namespaced annotations such as `doc:summary`
 - CEL literals as opaque extension tokens
@@ -366,7 +367,7 @@ Imported definitions should use the import label as the namespace prefix.
 ```kdl
 import "https://example.com/schemas/common" as="common"
 
-prop "host" ref="common:hostname"
+prop "host" ref=common:#hostname
 ```
 
 Rules:
@@ -500,6 +501,14 @@ prop "voice" {
 }
 ```
 
+Equivalent summary shorthand:
+
+```kdl
+prop "voice" doc="Voice identifier" {
+  type string
+}
+```
+
 Using a reserved `doc:` namespace buys several things:
 
 - documentation nodes are easy to recognize and ignore in validators
@@ -561,7 +570,7 @@ Defer unless needed:
 Named definitions should remain the primary reuse mechanism.
 
 ```kdl
-define "port" {
+define #port {
   value {
     type integer
     between 1 65535
@@ -574,7 +583,7 @@ Imports should remain explicit and prefixed:
 ```kdl
 import "https://example.com/schemas/common" as="common"
 
-prop "host" ref="common:hostname"
+prop "host" ref=common:#hostname
 ```
 
 ## Document Structure for the Spec

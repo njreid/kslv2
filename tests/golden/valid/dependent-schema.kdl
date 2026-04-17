@@ -1,0 +1,16 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/dependent-schema" version="0.1.0" {
+  document {
+    node "service" required {
+      dependent-schema prop="tls" {
+        prop "cert" required {
+          type string
+        }
+      }
+      prop "tls" optional {
+        type boolean
+      }
+    }
+  }
+}

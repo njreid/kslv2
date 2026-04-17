@@ -59,7 +59,7 @@ module.exports = grammar({
     schema_declaration: ($) => seq(optional($.tag), 'schema', field('id', $.string), repeat(field('header', $.property)), field('body', $.children)),
     info_declaration: ($) => seq(optional($.tag), 'info', repeat1($.property), optional($.children)),
     import_declaration: ($) => seq(optional($.tag), 'import', field('id', $.string), repeat(field('header', $.property)), optional($.children)),
-    define_declaration: ($) => seq(optional($.tag), 'define', field('name', $.string), repeat(field('header', $.property)), field('body', $.children)),
+    define_declaration: ($) => seq(optional($.tag), 'define', field('name', $.identity), repeat(field('header', $.property)), field('body', $.children)),
 
     document_subject: ($) => seq(optional($.tag), 'document', optional(field('body', $.children))),
     node_subject: ($) => seq(optional($.tag), 'node', field('name', $.string), optional(field('occurrence', $.occurrence_modifier)), repeat(field('header', $.property)), optional(field('body', $.children))),
@@ -72,7 +72,7 @@ module.exports = grammar({
 
     sequence_block: ($) => seq(optional($.tag), 'sequence', field('body', $.children)),
     choice_block: ($) => seq(optional($.tag), 'choice', field('body', $.children)),
-    content_ref: ($) => seq(optional($.tag), 'ref', field('target', $.string), optional($.children)),
+    content_ref: ($) => seq(optional($.tag), 'ref', field('target', $.identity), optional($.children)),
 
     type_constraint: ($) => seq(optional($.tag), 'type', field('value', $._symbol)),
     format_constraint: ($) => seq(optional($.tag), 'format', field('value', $._symbol)),
@@ -111,12 +111,13 @@ module.exports = grammar({
     ),
     _terminator: () => /\r?\n/,
 
-    _value: ($) => choice($.string, $.raw_string, $.number, $.integer, $.boolean, $.null, $._symbol, $.cel_literal),
-    _literal_or_symbol: ($) => choice($.string, $.raw_string, $.number, $.integer, $.boolean, $.null, $._symbol),
+    _value: ($) => choice($.string, $.raw_string, $.number, $.integer, $.boolean, $.null, $.identity, $._symbol, $.cel_literal),
+    _literal_or_symbol: ($) => choice($.string, $.raw_string, $.number, $.integer, $.boolean, $.null, $.identity, $._symbol),
 
     tag: ($) => seq('(', $.identifier, ')'),
     namespaced_identifier: () => /[A-Za-z_][A-Za-z0-9_-]*:[A-Za-z_][A-Za-z0-9_:-]*/,
     identifier: () => /[A-Za-z_][A-Za-z0-9_:-]*/,
+    identity: () => token(seq(optional(seq(/[A-Za-z_][A-Za-z0-9_-]*/, ':')), '#', /[A-Za-z_][A-Za-z0-9_-]*/)),
     _symbol: ($) => choice($.namespaced_identifier, $.identifier),
     string: () => /"([^"\\]|\\.)*"/,
     raw_string: () => /#"([^"\\]|\\.|"#)*"#/,

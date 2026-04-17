@@ -5,7 +5,7 @@
 schema "https://example.com/schemas/service" version="1.0.0" {
   info title="Service Config" description="Generic example for the improved KSL surface syntax"
 
-  define "hostname" {
+  define #hostname {
     value {
       type string
       format hostname
@@ -13,7 +13,7 @@ schema "https://example.com/schemas/service" version="1.0.0" {
     }
   }
 
-  define "port" {
+  define #port {
     value {
       type integer
       between 1 65535
@@ -43,8 +43,8 @@ schema "https://example.com/schemas/service" version="1.0.0" {
         }
       }
       then {
-        prop "host" required ref="hostname"
-        prop "port" required ref="port"
+        prop "host" required ref=#hostname
+        prop "port" required ref=#port
       }
       else {
         prop "socket" required {

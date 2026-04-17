@@ -1,0 +1,26 @@
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string)
+    )
+    (document_subject
+      (node_subject
+        (identifier)
+        (identifier)
+        (dependency_constraint
+          (property
+            (identifier)
+            (identifier)
+          )
+          (prop_subject
+            (identifier)
+            (identifier)
+            (type_constraint
+              (identifier))))
+        (prop_subject
+          (identifier)
+          (identifier)
+          (type_constraint
+            (identifier)))))))

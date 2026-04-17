@@ -6,7 +6,7 @@
 schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
   info title="TwiML Voice KDL Schema" description="Illustrative KSL schema for a KDL-native rendition of core TwiML Voice concepts"
 
-  define "http-method" {
+  define #http-method {
     value {
       type string
       enum GET POST
@@ -14,7 +14,7 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
     }
   }
 
-  define "url-string" {
+  define #url-string {
     value {
       type string
       format url-reference
@@ -22,7 +22,7 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
     }
   }
 
-  define "input-mode" {
+  define #input-mode {
     value {
       type string
       enum dtmf speech "dtmf speech"
@@ -32,7 +32,7 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
     }
   }
 
-  define "say-verb" {
+  define #say-verb {
     node "Say" {
       doc:summary "Read text to the caller using text-to-speech"
       doc:warning "Some voice and language combinations are invalid or provider-dependent"
@@ -64,7 +64,7 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
     }
   }
 
-  define "play-verb" {
+  define #play-verb {
     node "Play" {
       doc:summary "Play an audio file to the caller"
       props closed
@@ -77,7 +77,7 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
     }
   }
 
-  define "pause-verb" {
+  define #pause-verb {
     node "Pause" {
       doc:summary "Pause before executing further instructions"
       props closed
@@ -90,27 +90,27 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
     }
   }
 
-  define "redirect-verb" {
+  define #redirect-verb {
     node "Redirect" {
       doc:summary "Redirect call flow to another TwiML document"
       props closed
-      prop "method" optional ref="http-method"
-      arg 0 required ref="url-string"
+      prop "method" optional ref=#http-method
+      arg 0 required ref=#url-string
       children closed {}
     }
   }
 
-  define "number-noun" {
+  define #number-noun {
     node "Number" {
       doc:summary "Dial a telephone number within Dial"
       props open
-      prop "url" optional ref="url-string"
-      prop "method" optional ref="http-method"
+      prop "url" optional ref=#url-string
+      prop "method" optional ref=#http-method
       prop "sendDigits" optional {
         type string
       }
-      prop "statusCallback" optional ref="url-string"
-      prop "statusCallbackMethod" optional ref="http-method"
+      prop "statusCallback" optional ref=#url-string
+      prop "statusCallbackMethod" optional ref=#http-method
       arg 0 required {
         type string
         min-length 1
@@ -120,7 +120,7 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
     }
   }
 
-  define "conference-noun" {
+  define #conference-noun {
     node "Conference" {
       doc:summary "Join or create a named conference room"
       doc:warning "Conference names should not contain personal or sensitive data"
@@ -134,12 +134,12 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
     }
   }
 
-  define "dial-verb" {
+  define #dial-verb {
     node "Dial" {
       doc:summary "Connect the current caller to another party"
       props open
-      prop "action" optional ref="url-string"
-      prop "method" optional ref="http-method"
+      prop "action" optional ref=#url-string
+      prop "method" optional ref=#http-method
 
       any-of {
         arg 0 required {
@@ -149,21 +149,21 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
         }
         children closed {
           choice {
-            node "Number" many ref="number-noun"
-            node "Conference" required ref="conference-noun"
+            node "Number" many ref=#number-noun
+            node "Conference" required ref=#conference-noun
           }
         }
       }
     }
   }
 
-  define "gather-verb" {
+  define #gather-verb {
     node "Gather" {
       doc:summary "Collect digits, speech, or both"
       props open
-      prop "action" optional ref="url-string"
-      prop "method" optional ref="http-method"
-      prop "input" optional ref="input-mode"
+      prop "action" optional ref=#url-string
+      prop "method" optional ref=#http-method
+      prop "input" optional ref=#input-mode
       prop "timeout" optional {
         type integer
         min 1
@@ -187,14 +187,14 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
       }
 
       children closed {
-        node "Say" many ref="say-verb"
-        node "Play" many ref="play-verb"
-        node "Pause" many ref="pause-verb"
+        node "Say" many ref=#say-verb
+        node "Play" many ref=#play-verb
+        node "Pause" many ref=#pause-verb
       }
     }
   }
 
-  define "simple-verb" {
+  define #simple-verb {
     children closed {
       node "Hangup" optional {
         doc:summary "Terminate the call"
@@ -215,13 +215,13 @@ schema "https://example.com/schemas/twiml-voice-kdl" version="0.1.0" {
     node "Response" required {
       doc:summary "Required root element in TwiML Voice responses"
       children closed {
-        node "Say" many ref="say-verb"
-        node "Play" many ref="play-verb"
-        node "Pause" many ref="pause-verb"
-        node "Dial" many ref="dial-verb"
-        node "Gather" many ref="gather-verb"
-        node "Redirect" many ref="redirect-verb"
-        ref "simple-verb"
+        node "Say" many ref=#say-verb
+        node "Play" many ref=#play-verb
+        node "Pause" many ref=#pause-verb
+        node "Dial" many ref=#dial-verb
+        node "Gather" many ref=#gather-verb
+        node "Redirect" many ref=#redirect-verb
+        ref #simple-verb
       }
     }
   }

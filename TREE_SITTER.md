@@ -124,8 +124,9 @@ Tree-sitter should preserve header ordering from the source even if normalizatio
 
 Canonical header properties that should be recognized explicitly:
 
-- `ref="..."`
+- `ref=#...`
 - `default=<literal>`
+- `doc="..."`
 
 Suggested structure:
 

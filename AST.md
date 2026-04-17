@@ -63,7 +63,7 @@ Notes:
 
 - `id` comes from the `schema` string argument.
 - `version` comes from the `schema` node property if present.
-- `definitions` are keyed by local definition name without import prefix.
+- `definitions` are keyed by local identity name without the leading `#` and without import prefix.
 - imported definitions are not copied into `definitions`; they are resolved through `imports`.
 
 ## Source Locations
@@ -202,7 +202,8 @@ HeaderModifiers {
 
 Notes:
 
-- `ref` comes only from canonical `ref="..."` header properties.
+- `ref` comes only from canonical `ref=#...` or `ref=prefix:#...` header properties.
+- `doc="..."` header properties SHOULD normalize to an equivalent `doc:summary` annotation rather than remaining in `extra_properties`.
 - `literal_default` comes only from canonical `default=<literal>` header properties.
 - `extra_properties` is reserved for future standardized header-level modifiers or implementation-defined extensions.
 
@@ -219,8 +220,8 @@ ReferenceTarget {
 
 Examples:
 
-- `ref="port"` -> `{ raw: "port", namespace: null, local_name: "port", resolution_scope: local }`
-- `ref="common:hostname"` -> `{ raw: "common:hostname", namespace: "common", local_name: "hostname", resolution_scope: imported }`
+- `ref=#port` -> `{ raw: "#port", namespace: null, local_name: "port", resolution_scope: local }`
+- `ref=common:#hostname` -> `{ raw: "common:#hostname", namespace: "common", local_name: "hostname", resolution_scope: imported }`
 
 ## Literal Values
 
@@ -512,7 +513,7 @@ This keeps validation constraints distinct from tooling behavior.
 Surface syntax:
 
 ```kdl
-prop "host" required ref="common:hostname"
+prop "host" required ref=common:#hostname
 ```
 
 Normalized form:
@@ -524,7 +525,7 @@ Subject {
   occurrence: { min: 1, max: 1 }
   header: {
     ref: {
-      raw: "common:hostname",
+      raw: "common:#hostname",
       namespace: "common",
       local_name: "hostname",
       resolution_scope: imported,

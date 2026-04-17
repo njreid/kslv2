@@ -1,0 +1,7 @@
+[
+  {
+    "category": "invalid-ref-target-kind",
+    "message": "Property reference target kind 'node' is not compatible with prop use sites.",
+    "path": "schema.document.node[service].prop[host].ref"
+  }
+]

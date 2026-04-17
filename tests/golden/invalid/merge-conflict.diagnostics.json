@@ -1,0 +1,7 @@
+[
+  {
+    "category": "merge-conflicting-type",
+    "message": "Conflicting type constraints 'integer' and 'string' cannot be merged.",
+    "path": "schema.document.node[service].prop[port].ref"
+  }
+]

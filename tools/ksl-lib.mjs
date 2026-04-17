@@ -109,6 +109,7 @@ function parseValue(token) {
   if (token === '#true') return true
   if (token === '#false') return false
   if (token === '#null') return null
+  if (isIdentityToken(token)) return token
   if (/^-?[0-9]+$/.test(token)) return Number.parseInt(token, 10)
   if (/^-?[0-9]+\.[0-9]+$/.test(token)) return Number.parseFloat(token)
   return token
@@ -140,6 +141,7 @@ export function formatParseTree(node, indent = 0) {
 function classifyValue(value) {
   if (typeof value === 'string') {
     if (value.startsWith('#"')) return 'raw_string'
+    if (isIdentityToken(value)) return 'identity'
     return value.includes(' ') || value.includes('://') || value.includes('.') || value.includes('/') ? 'string' : 'identifier'
   }
   if (typeof value === 'number') return Number.isInteger(value) ? 'integer' : 'number'
@@ -186,7 +188,7 @@ function normalizeImport(node) {
 }
 
 function normalizeDefinition(node) {
-  const name = node.args[0]
+  const name = stripIdentity(node.args[0])
   const body = node.children[0]
   if (!body) return { name, body: null, annotations: [] }
 
@@ -218,6 +220,13 @@ function normalizeSubject(node) {
   if (kindUsesName(kind)) out.name = node.args[0] ?? null
   if (kind === 'arg') out.index = node.args[0] ?? null
   if (kind === 'props' || kind === 'children') out.openness = normalizeOpenness(node.args[0])
+
+  const docSummary = out.header?.extra_properties?.doc
+  if (typeof docSummary === 'string') {
+    out.annotations.push({ name: 'summary', namespace: 'doc', arguments: [docSummary] })
+    delete out.header.extra_properties.doc
+    if (Object.keys(out.header.extra_properties).length === 0) delete out.header.extra_properties
+  }
 
   for (const child of node.children) {
     if (isConstraintNode(child)) {
@@ -305,19 +314,19 @@ function normalizeHeader(props) {
 
 function normalizeReference(raw) {
   if (typeof raw !== 'string') return { raw, namespace: null, local_name: null, resolution_scope: 'local' }
-  const [maybeNs, maybeLocal] = raw.split(':')
-  if (maybeLocal !== undefined) {
+  const importedMatch = raw.match(/^([A-Za-z_][A-Za-z0-9_-]*):(#.+)$/)
+  if (importedMatch) {
     return {
       raw,
-      namespace: maybeNs,
-      local_name: maybeLocal,
+      namespace: importedMatch[1],
+      local_name: stripIdentity(importedMatch[2]),
       resolution_scope: 'imported',
     }
   }
   return {
     raw,
     namespace: null,
-    local_name: raw,
+    local_name: stripIdentity(raw),
     resolution_scope: 'local',
   }
 }
@@ -460,6 +469,16 @@ function isAnnotationNode(node) {
   return ['hint', 'highlight', 'bind', 'default', 'visible-if', 'enabled-if'].includes(node.name) || node.name.includes(':')
 }
 
+function isIdentityToken(value) {
+  return typeof value === 'string' && /^(?:[A-Za-z_][A-Za-z0-9_-]*:)?#[A-Za-z_][A-Za-z0-9_-]*$/.test(value)
+}
+
+function stripIdentity(value) {
+  if (typeof value !== 'string') return value
+  const match = value.match(/^(?:[A-Za-z_][A-Za-z0-9_-]*:)?#([A-Za-z_][A-Za-z0-9_-]*)$/)
+  return match ? match[1] : value
+}
+
 function normalizeSubjectKind(name) {
   return name === 'document' ? 'document' : name
 }
@@ -482,69 +501,163 @@ function pruneEmptyFields(object) {
 }
 
 export function validateFixture(tree) {
+  return validateNormalizedAst(normalizeFixtureAst(tree))
+}
+
+export function validateNormalizedAst(ast) {
   const diagnostics = []
-  const schema = tree.children.find((node) => node.name === 'schema')
+  const schema = ast?.schema
   if (!schema) return diagnostics
 
-  const definitions = new Map()
-  for (const child of schema.children) {
-    if (child.name === 'define') {
-      const name = child.args[0]
-      if (definitions.has(name)) {
+  const localDefinitions = new Map()
+  for (const definition of schema.definitions ?? []) {
+    const name = definition.name
+    if (localDefinitions.has(name)) {
         diagnostics.push({
           category: 'duplicate-definition',
           message: `Definition name '${name}' is declared more than once.`,
           path: `schema.definitions.${name}`,
-          related: ['define "' + name + '" at first declaration', 'define "' + name + '" at second declaration'],
+          related: ['define #' + name + ' at first declaration', 'define #' + name + ' at second declaration'],
         })
       }
-      definitions.set(name, child)
-    }
+    localDefinitions.set(name, definition)
   }
 
-  walk(tree, (node, ancestry) => {
-    if (node.props.ref && !definitions.has(node.props.ref) && !String(node.props.ref).includes(':')) {
-      diagnostics.push({
-        category: 'unresolved-reference',
-        message: `Reference target '${node.props.ref}' could not be resolved.`,
-        path: makeRefPath(ancestry, node),
-      })
-    }
-    if (node.name === 'choice') {
-      const seen = new Set()
-      for (const branch of node.children) {
-        if (branch.name !== 'node') continue
-        const branchName = branch.args[0]
-        if (seen.has(branchName)) {
-          diagnostics.push({
-            category: 'ambiguous-choice-leading-name',
-            message: `Choice branches overlap on leading node name '${branchName}'.`,
-            path: 'schema.document.node[root].children.choice',
-          })
-          break
-        }
-        seen.add(branchName)
+  const importedDefinitions = buildImportedDefinitionMap(schema.imports ?? [])
+  walkNormalizedSubject(schema.document, ['schema', 'document'], (subject, path) => {
+    const reference = subject?.header?.ref
+    if (reference) {
+      const resolved = resolveReference(reference, localDefinitions, importedDefinitions)
+      if (!resolved) {
+        diagnostics.push({
+          category: 'unresolved-reference',
+          message: `Reference target '${reference.raw}' could not be resolved.`,
+          path: `${path}.ref`,
+        })
+      } else {
+        const compatibility = validateReferenceCompatibility(subject, resolved)
+        if (compatibility) diagnostics.push({ ...compatibility, path: `${path}.ref` })
+        const merge = validateMerge(subject, resolved)
+        if (merge) diagnostics.push({ ...merge, path: `${path}.ref` })
       }
     }
+
+    for (const constraint of subject?.constraints ?? []) {
+      if (constraint.kind === 'dependency' && constraint.mode === 'dependent_required' && (!constraint.required_names || constraint.required_names.length === 0)) {
+        diagnostics.push({
+          category: 'invalid-dependent-required',
+          message: 'dependent-required must declare at least one required name.',
+          path,
+        })
+      }
+    }
+
+    const ambiguity = validateChoiceModel(subject?.content_model)
+    if (ambiguity) diagnostics.push({ ...ambiguity, path: `${path}.children.choice` })
   })
 
   return diagnostics
 }
 
-function walk(node, visit, ancestry = []) {
-  for (const child of node.children ?? []) {
-    visit(child, ancestry)
-    walk(child, visit, ancestry.concat(child))
+function buildImportedDefinitionMap(imports) {
+  const mockRegistry = {
+    'https://example.com/schemas/common': {
+      hostname: { name: 'hostname', body: { kind: 'value', constraints: [{ kind: 'type', type_name: 'string' }] } },
+      'service-node': { name: 'service-node', body: { kind: 'node', name: 'service' } },
+    },
+  }
+
+  const map = new Map()
+  for (const binding of imports) {
+    map.set(binding.prefix, mockRegistry[binding.schema_id] ?? {})
+  }
+  return map
+}
+
+function resolveReference(reference, localDefinitions, importedDefinitions) {
+  if (reference.resolution_scope === 'local') return localDefinitions.get(reference.local_name) ?? null
+  return importedDefinitions.get(reference.namespace)?.[reference.local_name] ?? null
+}
+
+function validateReferenceCompatibility(subject, definition) {
+  const targetKind = definition?.body?.kind
+  if (!targetKind) return null
+  if (subject.kind === 'prop' && !['prop', 'value'].includes(targetKind)) {
+    return {
+      category: 'invalid-ref-target-kind',
+      message: `Property reference target kind '${targetKind}' is not compatible with prop use sites.`,
+    }
+  }
+  if (subject.kind === 'arg' && !['arg', 'value'].includes(targetKind)) {
+    return {
+      category: 'invalid-ref-target-kind',
+      message: `Argument reference target kind '${targetKind}' is not compatible with arg use sites.`,
+    }
+  }
+  if (subject.kind === 'node' && targetKind !== 'node') {
+    return {
+      category: 'invalid-ref-target-kind',
+      message: `Node reference target kind '${targetKind}' is not compatible with node use sites.`,
+    }
+  }
+  return null
+}
+
+function validateMerge(subject, definition) {
+  const localType = firstConstraint(subject.constraints, 'type')
+  const targetType = firstConstraint(definition?.body?.constraints, 'type')
+  if (localType && targetType && localType.type_name !== targetType.type_name) {
+    return {
+      category: 'merge-conflicting-type',
+      message: `Conflicting type constraints '${localType.type_name}' and '${targetType.type_name}' cannot be merged.`,
+    }
+  }
+  return null
+}
+
+function firstConstraint(constraints = [], kind) {
+  return constraints.find((constraint) => constraint.kind === kind) ?? null
+}
+
+function validateChoiceModel(model) {
+  if (!model) return null
+  if (model.kind === 'children') return validateChoiceModel(model.content_model)
+  if (model.kind === 'choice') {
+    const seen = new Set()
+    for (const branch of model.branches ?? []) {
+      const name = branch?.name
+      if (!name) continue
+      if (seen.has(name)) {
+        return {
+          category: 'ambiguous-choice-leading-name',
+          message: `Choice branches overlap on leading node name '${name}'.`,
+        }
+      }
+      seen.add(name)
+    }
+  }
+  if (model.kind === 'sequence') {
+    for (const entry of model.entries ?? []) {
+      const nested = validateChoiceModel(entry)
+      if (nested) return nested
+    }
+  }
+  return null
+}
+
+function walkNormalizedSubject(subject, pathParts, visit) {
+  if (!subject) return
+  visit(subject, stringifySubjectPath(pathParts, subject))
+  for (const child of subject.children ?? []) {
+    const segment = child.kind === 'node' || child.kind === 'prop' ? `${child.kind}[${child.name}]` : child.kind
+    walkNormalizedSubject(child, pathParts.concat(segment), visit)
   }
 }
 
-function makeRefPath(ancestry, node) {
-  const serviceNode = ancestry.find((entry) => entry.name === 'node' && entry.args[0])
-  const propNode = node.name === 'prop' ? node : ancestry.find((entry) => entry.name === 'prop' && entry.args[0])
-  if (serviceNode && propNode) {
-    return `schema.document.node[${serviceNode.args[0]}].prop[${propNode.args[0]}].ref`
-  }
-  return 'schema.ref'
+function stringifySubjectPath(pathParts, subject) {
+  if (!subject || subject.kind === 'document') return pathParts.join('.')
+  if (subject.kind === 'node' || subject.kind === 'prop') return pathParts.join('.')
+  return pathParts.concat(subject.kind).join('.')
 }
 
 export function writeJson(filePath, value) {

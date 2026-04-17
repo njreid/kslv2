@@ -38,7 +38,7 @@ Required:
 - `node`, `prop`, `arg`, `args`, `value`, `props`, `children`
 - canonical occurrence modifiers
 - `type`, `format`, `enum`, `const`, `min`, `max`, `min-length`, `max-length`, `pattern`
-- `ref="..."`
+- `ref=#...`
 - `children`, `sequence`, `choice`
 - namespaced annotations as ignorable metadata
 - normalization to the model in [`AST.md`](./AST.md)

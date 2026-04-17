@@ -6,7 +6,7 @@ This document defines the compatibility rules for `ref` targets in KSL.
 
 It complements:
 
-- [`SPEC.md`](./SPEC.md) for the canonical `ref="..."` surface form
+- [`SPEC.md`](./SPEC.md) for the canonical `ref=#...` surface form
 - [`AST.md`](./AST.md) for normalized `ReferenceTarget`, `Definition`, `Subject`, `ConstraintSet`, and `ContentModel`
 - [`MERGE_SEMANTICS.md`](./MERGE_SEMANTICS.md) for how compatible fragments combine
 - [`WELL_FORMEDNESS.md`](./WELL_FORMEDNESS.md) for schema validity rules
@@ -43,9 +43,9 @@ Declaration header references are references attached directly to a subject head
 Examples:
 
 ```kdl
-prop "host" ref="hostname"
-node "bind" many ref="keybinding"
-arg 0 ref="path-string"
+prop "host" ref=#hostname
+node "bind" many ref=#keybinding
+arg 0 ref=#path-string
 ```
 
 ### 1.1 Subject-Compatible Reuse
@@ -54,14 +54,14 @@ A declaration header reference is compatible only if the referenced definition l
 
 Recommended rule:
 
-- `node ... ref="..."` requires a node-compatible target
-- `prop ... ref="..."` requires a property- or value-compatible target
-- `arg ... ref="..."` requires an argument- or value-compatible target
-- `args ... ref="..."` requires an argument-list-, value-, or compatible constraint fragment target
+- `node ... ref=#...` requires a node-compatible target
+- `prop ... ref=#...` requires a property- or value-compatible target
+- `arg ... ref=#...` requires an argument- or value-compatible target
+- `args ... ref=#...` requires an argument-list-, value-, or compatible constraint fragment target
 
 ### 1.2 Node Header Compatibility
 
-For `node "name" ref="target"`, valid targets SHOULD include:
+For `node "name" ref=#target`, valid targets SHOULD include:
 
 - a definition whose body is a `Subject` of kind `node`
 - a definition whose body is a `ConstraintSet` that can be applied to a node subject
@@ -74,7 +74,7 @@ Invalid targets SHOULD include:
 
 ### 1.3 Property Header Compatibility
 
-For `prop "name" ref="target"`, valid targets SHOULD include:
+For `prop "name" ref=#target`, valid targets SHOULD include:
 
 - a definition whose body is a `Subject` of kind `prop`
 - a definition whose body is a `Subject` of kind `value`
@@ -87,7 +87,7 @@ Recommended behavior:
 
 ### 1.4 Argument Header Compatibility
 
-For `arg N ref="target"`, valid targets SHOULD include:
+For `arg N ref=#target`, valid targets SHOULD include:
 
 - a definition whose body is a `Subject` of kind `arg`
 - a definition whose body is a `Subject` of kind `value`
@@ -95,7 +95,7 @@ For `arg N ref="target"`, valid targets SHOULD include:
 
 ### 1.5 Args Header Compatibility
 
-For `args ... ref="target"`, valid targets SHOULD include:
+For `args ... ref=#target`, valid targets SHOULD include:
 
 - a definition whose body is a `Subject` of kind `args`
 - a definition whose body is a `Subject` of kind `value`
@@ -105,9 +105,9 @@ For `args ... ref="target"`, valid targets SHOULD include:
 
 The following SHOULD be invalid unless the language later defines explicit coercion rules:
 
-- `prop "x" ref="some-node-definition"`
-- `node "x" ref="some-value-definition"`
-- `arg 0 ref="children-fragment"`
+- `prop "x" ref=#some-node-definition`
+- `node "x" ref=#some-value-definition`
+- `arg 0 ref=#children-fragment`
 
 ## 2. Content-Model References
 
@@ -117,7 +117,7 @@ Example:
 
 ```kdl
 children open {
-  ref "command-args"
+  ref #command-args
 }
 ```
 
@@ -184,12 +184,12 @@ Recommended initial compatibility matrix:
 
 | Use site | Compatible targets | Not compatible by default |
 | --- | --- | --- |
-| `node ... ref="x"` | `node`, `ConstraintSet` | `prop`, `arg`, `args`, bare `ContentModel`, bare `value` |
-| `prop ... ref="x"` | `prop`, `value`, `ConstraintSet` | `node`, `arg`, `args`, bare `ContentModel` |
-| `arg ... ref="x"` | `arg`, `value`, `ConstraintSet` | `node`, `prop`, `children`, bare `ContentModel` |
-| `args ... ref="x"` | `args`, `value`, `ConstraintSet` | `node`, `prop`, `children`, bare `ContentModel` |
-| `children { ref "x" }` | `ContentModel`, `node` | `prop`, `arg`, `args`, `value` |
-| branch-body `ref "x"` | `ConstraintSet`, compatible `Subject` | incompatible `ContentModel` by default |
+| `node ... ref=#x` | `node`, `ConstraintSet` | `prop`, `arg`, `args`, bare `ContentModel`, bare `value` |
+| `prop ... ref=#x` | `prop`, `value`, `ConstraintSet` | `node`, `arg`, `args`, bare `ContentModel` |
+| `arg ... ref=#x` | `arg`, `value`, `ConstraintSet` | `node`, `prop`, `children`, bare `ContentModel` |
+| `args ... ref=#x` | `args`, `value`, `ConstraintSet` | `node`, `prop`, `children`, bare `ContentModel` |
+| `children { ref #x }` | `ContentModel`, `node` | `prop`, `arg`, `args`, `value` |
+| branch-body `ref #x` | `ConstraintSet`, compatible `Subject` | incompatible `ContentModel` by default |
 
 This table is intentionally conservative.
 
@@ -207,7 +207,7 @@ If a referenced `node` subject has its own normalized `name`, implementations SH
 
 Recommended rule:
 
-- `node "bind" ref="keybinding"` is valid only if `keybinding` resolves to a node fragment named `bind`, unnamed, or explicitly documented as name-agnostic
+- `node "bind" ref=#keybinding` is valid only if `keybinding` resolves to a node fragment named `bind`, unnamed, or explicitly documented as name-agnostic
 
 This avoids surprising reuse where a declaration for one node name quietly imports the structure of another node kind.
 
@@ -235,7 +235,7 @@ Example:
 
 ```kdl
 import "https://example.com/schemas/common" as="common"
-prop "host" ref="common:hostname"
+prop "host" ref=common:#hostname
 ```
 
 The only extra requirement is successful imported-name resolution through the import prefix.

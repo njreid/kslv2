@@ -1,0 +1,11 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/imported-ref-kind-mismatch" version="0.1.0" {
+  import "https://example.com/schemas/common" as="common"
+
+  document {
+    node "service" required {
+      prop "host" required ref=common:#service-node
+    }
+  }
+}

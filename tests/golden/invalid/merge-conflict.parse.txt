@@ -5,6 +5,11 @@
       (identifier)
       (string)
     )
+    (define_declaration
+      (identity)
+      (value_subject
+        (type_constraint
+          (identifier))))
     (document_subject
       (node_subject
         (identifier)
@@ -15,4 +20,6 @@
           (property
             (identifier)
             (identity)
-          ))))))
+          )
+          (type_constraint
+            (identifier)))))))

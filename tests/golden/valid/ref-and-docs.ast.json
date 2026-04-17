@@ -57,7 +57,7 @@
               },
               "header": {
                 "ref": {
-                  "raw": "hostname",
+                  "raw": "#hostname",
                   "namespace": null,
                   "local_name": "hostname",
                   "resolution_scope": "local"

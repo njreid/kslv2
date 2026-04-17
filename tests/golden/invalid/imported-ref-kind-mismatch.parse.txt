@@ -5,6 +5,12 @@
       (identifier)
       (string)
     )
+    (import_declaration
+      (string)
+      (property
+        (identifier)
+        (identifier)
+      ))
     (document_subject
       (node_subject
         (identifier)

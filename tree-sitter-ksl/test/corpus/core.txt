@@ -28,7 +28,7 @@ Ref and docs
 ==================
 
 schema "https://example.com/schemas/ref-docs" version="0.1.0" {
-  define "hostname" {
+  define #hostname {
     value {
       type string
       format hostname
@@ -38,7 +38,7 @@ schema "https://example.com/schemas/ref-docs" version="0.1.0" {
 
   document {
     node "service" required {
-      prop "host" required ref="hostname"
+      prop "host" required ref=#hostname
     }
   }
 }
@@ -53,7 +53,7 @@ schema "https://example.com/schemas/ref-docs" version="0.1.0" {
       (string))
     (children
       (define_declaration
-        (string)
+        (identity)
         (children
           (value_subject
             (children
@@ -70,12 +70,12 @@ schema "https://example.com/schemas/ref-docs" version="0.1.0" {
             (string)
             (occurrence_modifier)
             (children
-              (prop_subject
-                (string)
-                (occurrence_modifier)
-                (property
-                  (identifier)
-                  (string))))))))))
+                  (prop_subject
+                    (string)
+                    (occurrence_modifier)
+                    (property
+                      (identifier)
+                      (identity))))))))))
 
 ==================
 Import and qualified ref
@@ -86,7 +86,7 @@ schema "https://example.com/schemas/imported" version="0.1.0" {
 
   document {
     node "service" required {
-      prop "host" required ref="common:hostname"
+      prop "host" required ref=common:#hostname
     }
   }
 }
@@ -111,12 +111,12 @@ schema "https://example.com/schemas/imported" version="0.1.0" {
             (string)
             (occurrence_modifier)
             (children
-              (prop_subject
-                (string)
-                (occurrence_modifier)
-                (property
-                  (identifier)
-                  (string))))))))))
+                  (prop_subject
+                    (string)
+                    (occurrence_modifier)
+                    (property
+                      (identifier)
+                      (identity))))))))))
 
 ==================
 Composition and conditionals
@@ -222,3 +222,107 @@ schema "https://example.com/schemas/cel" version="0.1.0" {
               (qualified_annotation
                 (namespaced_identifier)
                 (string)))))))))
+
+==================
+Props and built-in annotations
+==================
+
+schema "https://example.com/schemas/props-annotations" version="0.1.0" {
+  document {
+    node "workspace" required {
+      props closed
+      prop "name" optional {
+        type string
+        hint completion="enum"
+        highlight token="variable"
+        bind field="name"
+      }
+    }
+  }
+}
+
+---
+
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string))
+    (children
+      (document_subject
+        (children
+          (node_subject
+            (string)
+            (occurrence_modifier)
+            (children
+              (props_subject
+                (openness_modifier))
+              (prop_subject
+                (string)
+                (occurrence_modifier)
+                (children
+                  (type_constraint
+                    (identifier))
+                  (annotation_node
+                    (property
+                      (identifier)
+                      (string)))
+                  (annotation_node
+                    (property
+                      (identifier)
+                      (string)))
+                  (annotation_node
+                    (property
+                      (identifier)
+                      (string))))))))))))
+
+==================
+Children content ref
+==================
+
+schema "https://example.com/schemas/content-ref" version="0.1.0" {
+  define #command-args {
+    children open {
+      node "command" optional
+    }
+  }
+
+  document {
+    node "service" required {
+      children open {
+        ref #command-args
+      }
+    }
+  }
+}
+
+---
+
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string))
+    (children
+      (define_declaration
+        (identity)
+        (children
+          (children_subject
+            (openness_modifier)
+            (children
+              (node_subject
+                (string)
+                (occurrence_modifier))))))
+      (document_subject
+        (children
+          (node_subject
+            (string)
+            (occurrence_modifier)
+            (children
+              (children_subject
+                (openness_modifier)
+                (children
+                      (content_ref
+                        (identity)))))))))))

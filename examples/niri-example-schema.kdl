@@ -5,13 +5,13 @@
 schema "https://example.com/schemas/niri-config" version="0.1.0" {
   info title="Niri Config Schema" description="Illustrative schema for common Niri configuration sections"
 
-  define "bool-flag-node" {
+  define #bool-flag-node {
     node "flag" {
       doc:summary "Reusable marker for flag-like child nodes that are enabled by presence"
     }
   }
 
-  define "key-chord" {
+  define #key-chord {
     value {
       type string
       min-length 1
@@ -20,7 +20,7 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
     }
   }
 
-  define "percent-string" {
+  define #percent-string {
     value {
       type string
       pattern #"^[0-9]+%$"#
@@ -29,7 +29,7 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
     }
   }
 
-  define "command-args" {
+  define #command-args {
     children closed {
       node "spawn" optional {
         doc:summary "Launch a program directly"
@@ -202,7 +202,7 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
         node "focus-follows-mouse" optional {
           doc:summary "Focus windows and outputs when the pointer enters them"
           props closed
-          prop "max-scroll-amount" optional ref="percent-string"
+          prop "max-scroll-amount" optional ref=#percent-string
         }
       }
     }
@@ -300,7 +300,7 @@ schema "https://example.com/schemas/niri-config" version="0.1.0" {
             type string
           }
           children open {
-            ref "command-args"
+            ref #command-args
           }
           assert `countChild("spawn") + countChild("spawn-sh") + countChild("quit") + countChild("close-window") + countChild("fullscreen-window") + countChild("maximize-window-to-edges") >= 1`
         }

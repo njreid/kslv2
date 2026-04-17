@@ -1,0 +1,15 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/dependent-required" version="0.1.0" {
+  document {
+    node "service" required {
+      dependent-required prop="command" requires-props="shell"
+      prop "command" optional {
+        type string
+      }
+      prop "shell" optional {
+        type string
+      }
+    }
+  }
+}

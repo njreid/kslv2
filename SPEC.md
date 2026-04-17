@@ -31,14 +31,21 @@ All examples in this draft are otherwise intended to be KDL v2-compatible.
 
 ## 2. When to Use Quotation Marks
 
-KSL SHOULD use quotation marks to introduce schema-defined names, even when those names are representable as identifier strings in KDL v2.
+KSL SHOULD use quotation marks for document-language node and property names, even when those names are representable as identifier strings in KDL v2.
 
 Quotation marks SHOULD be used for:
 
-- definition names such as `define "port"`
 - node names such as `node "Response"`
 - property names such as `prop "host"`
-- references to named schema components such as `ref="port"` and `ref="common:hostname"`
+- prose and content strings such as `doc:summary "Required root element"`
+
+Reusable schema handles SHOULD use `#identity` form.
+
+Common cases that SHOULD use `#identity` include:
+
+- definition identities such as `define #port`
+- local references such as `ref=#port`
+- imported references such as `ref=common:#hostname`
 
 Quotation marks SHOULD NOT be used for canonical symbolic values when the value consists only of identifier-safe characters.
 
@@ -62,7 +69,7 @@ Examples:
 ```kdl
 type string
 enum tcp unix
-prop "host" ref="common:hostname"
+prop "host" ref=common:#hostname
 node "Response" required
 doc:summary "Required root element"
 import "https://example.com/schemas/common" as="common"
@@ -70,7 +77,7 @@ pattern #"^[0-9]+%$"#
 ```
 
 > Style:
-> Quote names being declared or referenced. Leave canonical value symbols unquoted. This keeps member names visually distinct from qualifiers and constraint values.
+> Quote node and property names. Use `#identity` for reusable schema handles. Leave canonical value symbols unquoted.
 
 ## 3. Core Principles
 
@@ -90,18 +97,17 @@ Conforming examples and style guidance MUST use the canonical forms below.
 
 ### 4.1 Name-Bearing Declarations
 
-When introducing or matching a schema-defined concept by name, KSL MUST use a quoted string argument.
+When introducing or matching document-language node and property names, KSL MUST use a quoted string argument.
 
 Canonical forms:
 
-- `define "name" { ... }`
 - `node "name" ...`
 - `prop "name" ...`
 
 Examples:
 
 ```kdl
-define "port" {
+define #port {
   value {
     type integer
   }
@@ -133,25 +139,50 @@ enum tcp unix
 const tcp
 ```
 
-### 4.3 References
+### 4.3 Reusable Identities
+
+Reusable schema components MUST be declared and referenced using `#identity` tokens.
+
+Canonical forms:
+
+- `define #name { ... }`
+- `ref=#name`
+- `ref=prefix:#name`
+
+Examples:
+
+```kdl
+define #hostname {
+  value {
+    type string
+  }
+}
+
+prop "host" ref=common:#hostname
+node "bind" many ref=#keybinding
+```
+
+Alternate spellings such as `define "name"` and `ref="name"` MUST NOT be part of the canonical surface.
+
+### 4.4 References
 
 References to named schema components MUST use the `ref` property form.
 
 Canonical form:
 
-- `ref="name"`
-- `ref="prefix:name"`
+- `ref=#name`
+- `ref=prefix:#name`
 
 Examples:
 
 ```kdl
-prop "host" ref="common:hostname"
-node "bind" many ref="keybinding"
+prop "host" ref=common:#hostname
+node "bind" many ref=#keybinding
 ```
 
 Alternate spellings such as `ref name` MUST NOT be part of the canonical surface.
 
-### 4.4 Literal Defaults
+### 4.5 Literal Defaults
 
 Literal defaults MUST use the `default=<literal>` property form on the declaration they modify.
 
@@ -167,7 +198,7 @@ prop "retries" optional default=3 {
 }
 ```
 
-### 4.5 Computed Defaults
+### 4.6 Computed Defaults
 
 Computed defaults MUST use a dedicated `default` child node whose argument is a CEL expression.
 
@@ -179,7 +210,7 @@ default `props.kind == "workspace" ? "main" : null`
 
 This distinction avoids overloading one syntax form with both literal values and computed expressions.
 
-### 4.6 Imports
+### 4.7 Imports
 
 Imports MUST use:
 
@@ -192,16 +223,16 @@ Canonical form:
 import "https://example.com/schemas/common" as="common"
 ```
 
-### 4.7 Constraint Shape
+### 4.8 Constraint Shape
 
 To minimize surface area, KSL MUST use:
 
 - child nodes for validation keywords such as `type`, `enum`, `const`, `format`, `min`, `max`, and `pattern`
-- properties for metadata-like modifiers attached to the declaration header such as `ref=...` and literal `default=...`
+- properties for metadata-like modifiers attached to the declaration header such as `ref=...`, `doc=...`, and literal `default=...`
 - trailing occurrence modifiers such as `required`, `optional`, `many`, `at-least`, `at-most`, and `between`
 
 > Style:
-> Quote names. Leave canonical value symbols unquoted. Use child nodes for validation constraints and properties for header-level modifiers.
+> Quote node and property names. Use `#identity` for reusable schema handles. Leave canonical value symbols unquoted. Use child nodes for validation constraints and properties for header-level modifiers.
 
 ## 5. Top-Level Structure
 
@@ -259,7 +290,7 @@ Example:
 
 ```kdl
 import "https://example.com/schemas/common" as="common"
-prop "host" ref="common:hostname"
+prop "host" ref=common:#hostname
 ibm:annotation severity="warning"
 ```
 
@@ -455,14 +486,14 @@ The `ref` property applies a named schema fragment.
 Example:
 
 ```kdl
-define "port" {
+define #port {
   value {
     type integer
     between 1 65535
   }
 }
 
-prop "listen-port" ref="port"
+prop "listen-port" ref=#port
 ```
 
 Implementations MUST resolve local definitions before imported ones when both scopes are available.
@@ -568,6 +599,8 @@ Recommended built-in annotation categories include:
 
 Documentation annotations MUST use the reserved `doc:` namespace.
 
+A `doc="..."` header property MUST be treated as equivalent to `doc:summary "..."` on the same declaration.
+
 ## 20. Documentation Annotations
 
 KSL MUST support structured documentation annotations.
@@ -593,6 +626,14 @@ prop "voice" {
   doc:summary "Voice identifier"
   doc:warning "Available voices may change by provider"
   doc:example "Polly.Joanna-Generative"
+}
+```
+
+Equivalent summary shorthand:
+
+```kdl
+prop "voice" doc="Voice identifier" {
+  type string
 }
 ```
 
@@ -693,7 +734,7 @@ A Tree-sitter grammar SHOULD be able to represent at least:
 
 - top-level schema structure
 - definition, import, and document nodes
-- subject-node headers such as `node "name" required ref="foo"`
+- subject-node headers such as `node "name" required ref=#foo`
 - child blocks including `children`, `sequence`, and `choice`
 - built-in annotations and qualified extension nodes such as `doc:summary`
 - backtick CEL literals as opaque tokens or strings in the CEL extension profile

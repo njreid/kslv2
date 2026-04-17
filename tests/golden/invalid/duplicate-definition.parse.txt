@@ -6,12 +6,12 @@
       (string)
     )
     (define_declaration
-      (identifier)
+      (identity)
       (value_subject
         (type_constraint
           (identifier))))
     (define_declaration
-      (identifier)
+      (identity)
       (value_subject
         (type_constraint
           (identifier))))))

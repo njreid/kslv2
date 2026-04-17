@@ -100,13 +100,13 @@ Local definition names MUST be unique within a schema document.
 Invalid:
 
 ```kdl
-define "port" {
+define #port {
   value {
     type integer
   }
 }
 
-define "port" {
+define #port {
   value {
     type string
   }
@@ -134,12 +134,12 @@ Recommended current rule:
 Invalid:
 
 ```kdl
-define "a" {
-  node "x" ref="b"
+define #a {
+  node "x" ref=#b
 }
 
-define "b" {
-  node "y" ref="a"
+define #b {
+  node "y" ref=#a
 }
 ```
 
@@ -153,11 +153,11 @@ Resolution rules come from [`SPEC.md`](./SPEC.md#15-definitions-and-references) 
 
 ### 4.2 Local References
 
-An unqualified `ref="name"` MUST resolve to exactly one local definition named `name`.
+An unqualified `ref=#name` MUST resolve to exactly one local definition named `name`.
 
 ### 4.3 Imported References
 
-A qualified `ref="prefix:name"` MUST resolve to exactly one imported definition reachable through `prefix`.
+A qualified `ref=prefix:#name` MUST resolve to exactly one imported definition reachable through `prefix`.
 
 ### 4.4 No Dangling References
 

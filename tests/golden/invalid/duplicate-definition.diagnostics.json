@@ -4,8 +4,8 @@
     "message": "Definition name 'port' is declared more than once.",
     "path": "schema.definitions.port",
     "related": [
-      "define \"port\" at first declaration",
-      "define \"port\" at second declaration"
+      "define #port at first declaration",
+      "define #port at second declaration"
     ]
   }
 ]
