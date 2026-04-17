@@ -554,7 +554,7 @@ prop "socket" required when=`props.mode != "tcp"` {
 }
 ```
 
-`if`, `then`, and `else` MUST NOT be part of the KSL language surface.
+Block-structured branching conditionals MUST NOT be part of the KSL language surface.
 
 ### 17.2 `dependent-required`
 

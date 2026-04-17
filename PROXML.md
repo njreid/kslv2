@@ -2,14 +2,14 @@
 
 ## Framing
 
-From the perspective of someone used to designing XML dialects, the KSL plan is promising but still too syntax-driven. The current draft has many good instincts:
+From the perspective of someone used to designing XML dialects, the KSL plan is promising and already has many of the right ingredients. The current draft has many good instincts:
 
 - it recognizes the importance of ordered children
 - it distinguishes assertions from annotations
 - it wants reuse, composition, and conditionals
 - it is clearly aiming at both validation and tooling
 
-But mature XML dialects succeed because they define a stable abstract model before they optimize authoring syntax. Right now, KSL still feels like a clever schema notation looking for a semantic core.
+Mature XML dialects usually succeed because they define a stable abstract model before they optimize authoring syntax. KSL would benefit from leaning even further in that direction.
 
 TwiML is a useful comparison point because it is a constrained XML dialect that is simple on the surface but very disciplined underneath. `<Response>` is the required root container. `<Gather>` has a clear content model and a defined set of allowed nested verbs. `<Say>` has a tightly scoped attribute model plus simple text content. That clarity is what KSL still needs more of.
 
@@ -17,7 +17,7 @@ TwiML is a useful comparison point because it is a constrained XML dialect that 
 
 The current KSL plan spends a lot of energy on surface forms like `required`, `optional`, `many`, `prop`, `arg`, and `children`, but less on the normalized semantic representation behind them.
 
-That is backwards for a language that wants:
+That ordering is likely to be challenging for a language that wants:
 
 - LSP support
 - binding generation
@@ -75,7 +75,7 @@ Recommendation:
 - define ambiguity resolution rules or ban ambiguous schemas outright
 - require implementations to produce branch-level diagnostics when content-model matching fails
 
-## 3. The plan underestimates namespace pressure
+## 3. The plan could benefit from a stronger namespace strategy
 
 XML dialects survive long term because namespacing is not optional. It is what lets core vocabulary, extension vocabulary, documentation vocabulary, and vendor-specific metadata coexist without collisions.
 
@@ -124,7 +124,7 @@ This becomes especially important when the same schema is used for:
 - server-side validation
 - code generation
 
-Without a hard boundary, schemas will accumulate “soft validation” inside annotation nodes and become impossible to reason about.
+Without a hard boundary, schemas may gradually accumulate “soft validation” inside annotation nodes and become harder to reason about.
 
 Recommendation:
 
@@ -132,13 +132,13 @@ Recommendation:
 - forbid annotation nodes from changing validation outcome in the core conformance profile
 - require unknown annotations to be ignorable by validators
 
-## 5. The CEL plan is powerful, but architecturally dangerous
+## 5. The CEL plan is powerful, but needs careful architectural boundaries
 
 From an XML perspective, CEL is KSL’s Schematron moment.
 
 That can be good. XML schema languages eventually need a rule layer for constraints that are awkward in structural grammar alone. But Schematron succeeded because it was treated as a deliberate second layer, not as loose escape syntax sprinkled through everything.
 
-Right now the KSL plan risks making CEL do too much:
+At the moment, the KSL plan risks asking CEL to do too much:
 
 - validation assertions
 - default computation
@@ -161,7 +161,7 @@ Recommendation:
 
 ## 6. Open and closed world defaults are not just UX choices; they are compatibility contracts
 
-The plan leans toward closed defaults because they help completions and diagnostics. That is understandable, but the framing is too editor-centric.
+The plan leans toward closed defaults because they help completions and diagnostics. That is understandable, though the framing may still be more editor-centric than ideal.
 
 In schema languages, open vs closed content is a versioning strategy.
 
@@ -189,7 +189,7 @@ Recommendation:
 
 ## 7. References, imports, and composition need identity and cycle semantics
 
-The current plan says named definitions should be primary and imports should exist. That is fine, but not enough.
+The current plan says named definitions should be primary and imports should exist. That is a solid start, though more detail is still needed.
 
 An XML architect will immediately ask:
 
@@ -273,9 +273,9 @@ Recommendation:
 - add note types such as `warning`, `caution`, and `compatibility`
 - let docs reference version-introduced and version-changed information cleanly
 
-## 10. The conformance story is still too soft
+## 10. The conformance story could be sharper
 
-The current plan gestures toward profiles such as Core Validation, Composition, CEL, and Tooling Annotations. That is directionally right, but still too permissive.
+The current plan gestures toward profiles such as Core Validation, Composition, CEL, and Tooling Annotations. That direction makes sense, though the profile boundaries could still be sharper.
 
 If KSL has multiple profiles, then interoperability depends on predictable failure behavior.
 
@@ -285,7 +285,7 @@ For example:
 - what happens if an editor understands annotations but not CEL?
 - what happens if a binding generator ignores `one-of`?
 
-XML ecosystems learned long ago that partial support without sharp failure rules creates chaos.
+XML ecosystems learned long ago that partial support without sharp failure rules can create a great deal of confusion.
 
 Recommendation:
 
@@ -351,11 +351,11 @@ The KSL plan is moving in the right direction, especially in these areas:
 - adopting JSON Schema composition and conditionals selectively
 - targeting real tooling use cases instead of validation alone
 
-But from an XML dialect architect’s perspective, the plan is not ready to harden until it does four things more rigorously:
+From an XML dialect architect’s perspective, the plan would benefit from firming up four areas before hardening further:
 
 1. Define a canonical normalized schema model.
 2. Formalize child content-model semantics and ambiguity rules.
 3. Introduce a real extension and namespacing strategy.
 4. Constrain CEL to a disciplined secondary rule layer.
 
-If those four areas are handled well, the rest of the language can evolve safely. If they are left fuzzy, KSL will likely become easy to demo and hard to implement consistently.
+If those four areas are handled well, the rest of the language can evolve safely. If they remain underspecified, KSL may become easier to demo than to implement consistently.

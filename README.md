@@ -1,6 +1,10 @@
 # KSLv2 Draft
 
-Draft specification set for an improved KDL Schema Language.
+This repository collects a draft specification set for a possible next step in the KDL Schema Language.
+
+The goal is to explore a KDL-native, tool-friendly schema design that stays compact for authors while giving validators, editors, documentation tooling, and generators a clearer shared model.
+
+The documents here are intended to build on earlier KDL schema work in a constructive way and gather the pieces needed for a more cohesive forward path.
 
 ## Start Here
 
@@ -15,6 +19,7 @@ Draft specification set for an improved KDL Schema Language.
 - [`REFERENCE_COMPATIBILITY.md`](./REFERENCE_COMPATIBILITY.md): where `ref` is allowed
 - [`MERGE_SEMANTICS.md`](./MERGE_SEMANTICS.md): how compatible refs combine
 - [`CHOICE_AMBIGUITY.md`](./CHOICE_AMBIGUITY.md): deterministic `choice` rules
+- [`ASSERT_PATTERNS.md`](./ASSERT_PATTERNS.md): seed list for future declarative replacements of common `assert` forms
 
 ## Parser Work
 

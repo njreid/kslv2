@@ -13,6 +13,7 @@
 - `SPEC.md`
 - `README.md`
 - `CONFORMANCE_PROFILES.md`
+- `ASSERT_PATTERNS.md`
 - `AST.md`
 - `MERGE_SEMANTICS.md`
 - `CHOICE_AMBIGUITY.md`
@@ -41,11 +42,12 @@
 - Added `MERGE_SEMANTICS.md` for formal conjunctive merge behavior after compatible reference resolution.
 - Added `CHOICE_AMBIGUITY.md` for a conservative deterministic `choice` ambiguity algorithm.
 - Added `README.md` as a publishable document index and `CONFORMANCE_PROFILES.md` for implementation claims.
+- Added `ASSERT_PATTERNS.md` to collect recurring non-core `assert <CEL>` shapes before standardizing declarative replacements.
 - Added a minimal `tree-sitter-ksl/` scaffold with grammar and query placeholders.
 - Added `tests/golden/` fixtures for valid and invalid schema cases.
 - Added fixture-backed imported schema source under `tests/imports/` for import-resolution testing.
 - Replaced the fixture-shaped normalizer with a more general CST-to-AST lowering pass in `tools/ksl-lib.mjs`.
-- Expanded the Tree-sitter corpus to cover imports, composition/conditionals, and CEL-bearing annotations.
+- Expanded the Tree-sitter corpus to cover imports, composition, guarded declarations, and CEL-bearing annotations.
 - Added golden fixtures for `dependent-required`, `dependent-schema`, merge conflicts, and imported ref kind mismatches.
 - Refactored diagnostics generation to validate the normalized AST rather than only the raw parsed nodes.
 - Revised example schemas to use structured `doc:*` annotations.
@@ -80,7 +82,7 @@
 - `node ./tools/golden-validate.mjs`
 - `npm --prefix ./tree-sitter-ksl run generate`
 - `npm --prefix ./tree-sitter-ksl run test`
-- The Tree-sitter scaffold currently passes its checked-in corpus tests, including refs, imports, composition, conditionals, props, content refs, and CEL annotation cases.
+- The Tree-sitter scaffold currently passes its checked-in corpus tests, including refs, imports, composition, guarded declarations, props, content refs, and CEL annotation cases.
 
 ## Planned
 

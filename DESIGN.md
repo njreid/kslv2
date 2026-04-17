@@ -23,7 +23,7 @@ Standard KDL v2 does not define backticks as string delimiters. Everything else 
 
 ## Problem
 
-KDL Schema v1 proved that a schema language embedded in KDL is viable, but it is verbose and some may find it a bit awkward to author. The current KSL v2 draft moves toward a better model, especially by borrowing from JSON Schema, but it is still incomplete and still spends too much language surface on author-facing mechanics.
+KDL Schema v1 proved that a schema language embedded in KDL is viable, but it can feel fairly verbose for regular authoring. The current KSL v2 draft moves toward a stronger model, especially by borrowing from JSON Schema, but it is still incomplete and still leaves room to simplify the author-facing surface.
 
 The next design should optimize for:
 
@@ -394,7 +394,6 @@ Assertions affect validity. Examples:
 - `sequence`
 - `choice`
 - `all-of`
-- `if`
 - `dependent-required`
 
 ### Annotations
@@ -515,7 +514,7 @@ They are declarative, common, and more interoperable than encoding everything as
 Recommendation:
 
 - make `when=` the only conditional surface form
-- remove `if` / `then` / `else` from the language entirely
+- remove block-structured branching conditionals from the language entirely
 
 ### Other parts of KSL that still feel imperative
 
