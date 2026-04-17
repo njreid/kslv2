@@ -1,0 +1,75 @@
+{
+  "schema": {
+    "id": "https://example.com/schemas/ref-docs",
+    "version": "0.1.0",
+    "imports": [],
+    "definitions": [
+      {
+        "name": "hostname",
+        "body": {
+          "kind": "value",
+          "occurrence": {
+            "min": 1,
+            "max": 1
+          },
+          "constraints": [
+            {
+              "kind": "type",
+              "type_name": "string"
+            },
+            {
+              "kind": "format",
+              "format_name": "hostname"
+            }
+          ],
+          "annotations": [
+            {
+              "name": "summary",
+              "namespace": "doc",
+              "arguments": [
+                "Hostname value"
+              ]
+            }
+          ]
+        },
+        "annotations": []
+      }
+    ],
+    "document": {
+      "kind": "document",
+      "occurrence": {
+        "min": 1,
+        "max": 1
+      },
+      "children": [
+        {
+          "kind": "node",
+          "occurrence": {
+            "min": 1,
+            "max": 1
+          },
+          "children": [
+            {
+              "kind": "prop",
+              "occurrence": {
+                "min": 1,
+                "max": 1
+              },
+              "header": {
+                "ref": {
+                  "raw": "hostname",
+                  "namespace": null,
+                  "local_name": "hostname",
+                  "resolution_scope": "local"
+                }
+              },
+              "name": "host"
+            }
+          ],
+          "name": "service"
+        }
+      ]
+    },
+    "annotations": []
+  }
+}

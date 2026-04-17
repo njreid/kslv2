@@ -1,0 +1,15 @@
+{
+  "name": "tree-sitter-ksl",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Tree-sitter grammar scaffold for KSL",
+  "main": "grammar.js",
+  "license": "UNLICENSED",
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.24.0"
+  }
+}

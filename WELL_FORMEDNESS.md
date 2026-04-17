@@ -8,6 +8,9 @@ It complements:
 
 - [`SPEC.md`](./SPEC.md) for the user-facing language and canonical surface forms
 - [`AST.md`](./AST.md) for the normalized semantic model
+- [`MERGE_SEMANTICS.md`](./MERGE_SEMANTICS.md) for how compatible fragments combine after resolution
+- [`CHOICE_AMBIGUITY.md`](./CHOICE_AMBIGUITY.md) for the initial `choice` ambiguity algorithm
+- [`REFERENCE_COMPATIBILITY.md`](./REFERENCE_COMPATIBILITY.md) for ref target compatibility by use site
 - [`TREE_SITTER.md`](./TREE_SITTER.md) for concrete syntax tree shape
 - [`DESIGN.md`](./DESIGN.md) for rationale and non-normative design guidance
 
@@ -39,7 +42,7 @@ Well-formedness checks SHOULD run after normalization, because many rules depend
 
 A KSL schema is well-formed only if all rules in this document succeed.
 
-If a schema is not well-formed, validators and tooling SHOULD reject it before attempting instance validation.
+If a schema is not well-formed, validators and tooling MUST reject it before attempting instance validation.
 
 ## 1. Top-Level Rules
 
@@ -114,7 +117,7 @@ define "port" {
 
 A definition body MUST normalize to a valid reusable fragment, as described in [`AST.md`](./AST.md#definitions).
 
-At minimum, implementations SHOULD support definitions that lower to:
+At minimum, implementations MUST support definitions that lower to:
 
 - a `Subject`
 - a `ContentModel`
@@ -169,7 +172,7 @@ Examples:
 - a reference used as a child content item SHOULD resolve to a compatible child/content fragment
 - a reference used on a `prop` header SHOULD resolve to a compatible reusable constraint or subject fragment
 
-The exact compatibility matrix should eventually be specified normatively, but implementations MUST reject obviously incompatible uses.
+The compatibility matrix is described in [`REFERENCE_COMPATIBILITY.md`](./REFERENCE_COMPATIBILITY.md). Implementations MUST reject incompatible uses.
 
 ## 5. Subject Rules
 
@@ -224,7 +227,7 @@ If surface syntax would normalize to incompatible occurrence constraints for the
 
 ### 6.3 Choice Branch Cardinality Sanity
 
-Implementations SHOULD reject clearly contradictory branch cardinalities where a branch can never match.
+Implementations MUST reject clearly contradictory branch cardinalities where a branch can never match.
 
 ## 7. Constraint Rules
 
@@ -245,7 +248,7 @@ Examples:
 
 If a constraint kind is semantically singleton and no merge rule is defined, duplicate occurrences in the same normalized scope are invalid.
 
-Examples that SHOULD be rejected unless a merge rule is specified:
+Examples that MUST be rejected unless a merge rule is specified:
 
 - two unrelated `type` constraints in the same simple scope
 - two conflicting `format` constraints in the same simple scope
@@ -287,26 +290,13 @@ A `choice` content model MUST contain at least one branch.
 
 ### 8.5 Choice Ambiguity
 
-A `choice` content model MUST NOT be ambiguous.
+A `choice` content model MUST satisfy the ambiguity rules in [`CHOICE_AMBIGUITY.md`](./CHOICE_AMBIGUITY.md).
 
-Recommended initial rule:
-
-- if two branches can both match the same leading node pattern with no deterministic disambiguation rule, the schema is not well-formed
-
-Examples of likely ambiguity:
-
-```kdl
-children closed {
-  choice {
-    node "env" many
-    node "env" optional
-  }
-}
-```
+If a `choice` fails that algorithm, the schema is not well-formed.
 
 ### 8.6 Unordered Duplicate Entry Review
 
-In bare unordered `children` blocks, implementations SHOULD reject duplicate entries for the same node name unless a merge rule is explicitly defined.
+In bare unordered `children` blocks, implementations MUST reject duplicate entries for the same node name unless a merge rule is explicitly defined.
 
 Invalid recommended example:
 

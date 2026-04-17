@@ -1,0 +1,21 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/sequence-choice" version="0.1.0" {
+  document {
+    node "root" required {
+      children closed {
+        sequence {
+          node "name" required {
+            arg 0 {
+              type string
+            }
+          }
+          choice {
+            node "tcp" optional
+            node "unix" optional
+          }
+        }
+      }
+    }
+  }
+}

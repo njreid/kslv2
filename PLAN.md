@@ -21,4 +21,8 @@
 - [x] Draft a normalized internal AST specification.
 - [x] Draft a Tree-sitter parse-shape appendix.
 - [x] Draft a separate well-formedness rules document with inter-doc links.
+- [x] Draft a separate reference-compatibility document with inter-doc links.
+- [x] Draft a separate merge-semantics document with inter-doc links.
+- [x] Draft a separate choice-ambiguity document with inter-doc links.
+- [x] Tighten `SPEC.md` and `WELL_FORMEDNESS.md` toward more normative language.
 - [x] Record documentation-only verification status in `TESTING.md`.

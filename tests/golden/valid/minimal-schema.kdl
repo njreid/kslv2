@@ -1,0 +1,7 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/minimal" version="0.1.0" {
+  document {
+    node "root" required
+  }
+}

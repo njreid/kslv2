@@ -1,0 +1,15 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/duplicate-definition" version="0.1.0" {
+  define "port" {
+    value {
+      type integer
+    }
+  }
+
+  define "port" {
+    value {
+      type string
+    }
+  }
+}

@@ -1,0 +1,27 @@
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string)
+    )
+    (define_declaration
+      (identifier)
+      (value_subject
+        (type_constraint
+          (identifier))
+        (format_constraint
+          (identifier))
+        (qualified_annotation
+          (string))))
+    (document_subject
+      (node_subject
+        (identifier)
+        (identifier)
+        (prop_subject
+          (identifier)
+          (identifier)
+          (property
+            (identifier)
+            (identifier)
+          ))))))

@@ -1,0 +1,560 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+const TOKEN_RE = /"([^"\\]|\\.)*"|#"([^"\\]|\\.|"#)*"#|`([^`\\]|\\.|\n)*`|[{}=()]|[^\s{}=()]+/g
+
+export function readFile(filePath) {
+  return fs.readFileSync(filePath, 'utf8')
+}
+
+export function listKdlFiles(dirPath) {
+  return fs.readdirSync(dirPath).filter((name) => name.endsWith('.kdl')).sort().map((name) => path.join(dirPath, name))
+}
+
+export function parseKslText(text) {
+  const lines = text.split(/\r?\n/)
+  const root = { type: 'source_file', children: [] }
+  const stack = [root]
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith('//') || line.startsWith('/-')) continue
+    if (line === '}') {
+      if (stack.length > 1) stack.pop()
+      continue
+    }
+
+    const opensBlock = line.endsWith('{')
+    const content = opensBlock ? line.slice(0, -1).trimEnd() : line
+    const node = parseNode(content)
+    stack[stack.length - 1].children.push(node)
+    if (opensBlock) stack.push(node)
+  }
+
+  return root
+}
+
+function parseNode(line) {
+  const tokens = Array.from(line.matchAll(TOKEN_RE), (m) => m[0])
+  if (tokens.length === 0) return { type: 'generic_node', name: '', args: [], props: {}, children: [] }
+
+  const name = tokens[0]
+  const node = {
+    type: classifyNode(name),
+    name,
+    args: [],
+    props: {},
+    children: [],
+  }
+
+  for (let i = 1; i < tokens.length; i += 1) {
+    const token = tokens[i]
+    if (i + 2 < tokens.length && tokens[i + 1] === '=') {
+      node.props[token] = parseValue(tokens[i + 2])
+      i += 2
+      continue
+    }
+    node.args.push(parseValue(token))
+  }
+
+  return node
+}
+
+function classifyNode(name) {
+  switch (name) {
+    case 'schema': return 'schema_declaration'
+    case 'import': return 'import_declaration'
+    case 'define': return 'define_declaration'
+    case 'document': return 'document_subject'
+    case 'node': return 'node_subject'
+    case 'prop': return 'prop_subject'
+    case 'arg': return 'arg_subject'
+    case 'args': return 'args_subject'
+    case 'value': return 'value_subject'
+    case 'props': return 'props_subject'
+    case 'children': return 'children_subject'
+    case 'sequence': return 'sequence_block'
+    case 'choice': return 'choice_block'
+    case 'type': return 'type_constraint'
+    case 'format': return 'format_constraint'
+    case 'enum': return 'enum_constraint'
+    case 'const': return 'const_constraint'
+    case 'pattern': return 'pattern_constraint'
+    case 'all-of':
+    case 'any-of':
+    case 'one-of':
+    case 'not': return 'composition_constraint'
+    case 'if':
+    case 'then':
+    case 'else': return 'conditional_constraint'
+    case 'dependent-required':
+    case 'dependent-schema': return 'dependency_constraint'
+    case 'assert': return 'assert_constraint'
+    case 'ref': return 'content_ref'
+    case 'hint':
+    case 'highlight':
+    case 'bind':
+    case 'default':
+    case 'visible-if':
+    case 'enabled-if': return 'annotation_node'
+    default:
+      return name.includes(':') ? 'qualified_annotation' : 'generic_node'
+  }
+}
+
+function parseValue(token) {
+  if (token.startsWith('"')) return JSON.parse(token)
+  if (token.startsWith('#"')) return token
+  if (token.startsWith('`')) return token.slice(1, -1)
+  if (token === '#true') return true
+  if (token === '#false') return false
+  if (token === '#null') return null
+  if (/^-?[0-9]+$/.test(token)) return Number.parseInt(token, 10)
+  if (/^-?[0-9]+\.[0-9]+$/.test(token)) return Number.parseFloat(token)
+  return token
+}
+
+export function formatParseTree(node, indent = 0) {
+  if (node.type === 'source_file') {
+    const inner = node.children.map((child) => formatParseTree(child, indent + 2)).join('\n')
+    return `${' '.repeat(indent)}(source_file${inner ? `\n${inner}` : ''})`
+  }
+
+  const lines = [`${' '.repeat(indent)}(${node.type}`]
+  for (const arg of node.args) {
+    lines.push(`${' '.repeat(indent + 2)}(${classifyValue(arg)})`)
+  }
+  for (const propName of Object.keys(node.props)) {
+    lines.push(`${' '.repeat(indent + 2)}(property`)
+    lines.push(`${' '.repeat(indent + 4)}(identifier)`)
+    lines.push(`${' '.repeat(indent + 4)}(${classifyValue(node.props[propName])})`)
+    lines.push(`${' '.repeat(indent + 2)})`)
+  }
+  for (const child of node.children) {
+    lines.push(formatParseTree(child, indent + 2))
+  }
+  lines[lines.length - 1] += ')'
+  return lines.join('\n')
+}
+
+function classifyValue(value) {
+  if (typeof value === 'string') {
+    if (value.startsWith('#"')) return 'raw_string'
+    return value.includes(' ') || value.includes('://') || value.includes('.') || value.includes('/') ? 'string' : 'identifier'
+  }
+  if (typeof value === 'number') return Number.isInteger(value) ? 'integer' : 'number'
+  if (typeof value === 'boolean') return 'boolean'
+  if (value === null) return 'null'
+  return 'identifier'
+}
+
+export function normalizeFixtureAst(tree) {
+  const schema = tree.children.find((node) => node.name === 'schema')
+  const result = {
+    schema: {
+      id: schema?.args[0] ?? null,
+      version: schema?.props.version ?? null,
+      imports: [],
+      definitions: [],
+      document: null,
+      annotations: [],
+    },
+  }
+
+  if (!schema) return result
+
+  for (const child of schema.children) {
+    if (child.name === 'import') {
+      result.schema.imports.push(normalizeImport(child))
+    } else if (child.name === 'define') {
+      result.schema.definitions.push(normalizeDefinition(child))
+    } else if (child.name === 'document') {
+      result.schema.document = normalizeSubject(child)
+    } else if (isAnnotationNode(child)) {
+      result.schema.annotations.push(normalizeAnnotation(child))
+    }
+  }
+
+  return result
+}
+
+function normalizeImport(node) {
+  return {
+    schema_id: node.args[0] ?? null,
+    prefix: node.props.as ?? null,
+  }
+}
+
+function normalizeDefinition(node) {
+  const name = node.args[0]
+  const body = node.children[0]
+  if (!body) return { name, body: null, annotations: [] }
+
+  return {
+    name,
+    body: normalizeReusableBody(body),
+    annotations: [],
+  }
+}
+
+function normalizeReusableBody(node) {
+  if (node.name === 'sequence' || node.name === 'choice') {
+    return normalizeContentEntry(node)
+  }
+  return normalizeSubject(node)
+}
+
+function normalizeSubject(node) {
+  const kind = normalizeSubjectKind(node.name)
+  const out = {
+    kind,
+    occurrence: normalizeOccurrence(node.args.slice(kind === 'arg' ? 1 : kindUsesName(kind) ? 1 : 0)),
+    header: normalizeHeader(node.props),
+    constraints: [],
+    annotations: [],
+    children: [],
+  }
+
+  if (kindUsesName(kind)) out.name = node.args[0] ?? null
+  if (kind === 'arg') out.index = node.args[0] ?? null
+  if (kind === 'props' || kind === 'children') out.openness = normalizeOpenness(node.args[0])
+
+  for (const child of node.children) {
+    if (isConstraintNode(child)) {
+      out.constraints.push(normalizeConstraint(child))
+    } else if (isAnnotationNode(child)) {
+      out.annotations.push(normalizeAnnotation(child))
+    } else if (isSubjectNode(child)) {
+      if (child.name === 'children') {
+        out.content_model = normalizeChildrenSubject(child)
+      } else {
+        out.children.push(normalizeSubject(child))
+      }
+    } else if (child.name === 'sequence' || child.name === 'choice' || child.name === 'ref') {
+      out.content_model = normalizeContentEntry(child)
+    }
+  }
+
+  pruneEmptyFields(out)
+  return out
+}
+
+function normalizeChildrenSubject(node) {
+  const out = {
+    kind: 'children',
+    openness: normalizeOpenness(node.args[0]),
+    content_model: null,
+  }
+
+  if (node.children.length === 0) {
+    out.content_model = { kind: 'unordered', entries: [] }
+    return out
+  }
+
+  if (node.children.length === 1 && (node.children[0].name === 'sequence' || node.children[0].name === 'choice')) {
+    out.content_model = normalizeContentEntry(node.children[0])
+    return out
+  }
+
+  out.content_model = {
+    kind: 'unordered',
+    entries: node.children.map(normalizeContentEntry),
+  }
+  return out
+}
+
+function normalizeContentEntry(node) {
+  if (node.name === 'sequence') {
+    return {
+      kind: 'sequence',
+      entries: node.children.map(normalizeContentEntry),
+    }
+  }
+  if (node.name === 'choice') {
+    return {
+      kind: 'choice',
+      branches: node.children.map(normalizeContentEntry),
+    }
+  }
+  if (node.name === 'ref') {
+    return {
+      kind: 'ref',
+      target: normalizeReference(node.args[0]),
+    }
+  }
+  if (node.name === 'node') {
+    return normalizeSubject(node)
+  }
+  return { kind: 'unknown' }
+}
+
+function normalizeHeader(props) {
+  const header = {
+    ref: props.ref ? normalizeReference(props.ref) : null,
+    literal_default: Object.hasOwn(props, 'default') ? props.default : null,
+    extra_properties: {},
+  }
+
+  for (const [key, value] of Object.entries(props)) {
+    if (key !== 'ref' && key !== 'default') header.extra_properties[key] = value
+  }
+  if (Object.keys(header.extra_properties).length === 0) delete header.extra_properties
+  pruneEmptyFields(header)
+  return header
+}
+
+function normalizeReference(raw) {
+  if (typeof raw !== 'string') return { raw, namespace: null, local_name: null, resolution_scope: 'local' }
+  const [maybeNs, maybeLocal] = raw.split(':')
+  if (maybeLocal !== undefined) {
+    return {
+      raw,
+      namespace: maybeNs,
+      local_name: maybeLocal,
+      resolution_scope: 'imported',
+    }
+  }
+  return {
+    raw,
+    namespace: null,
+    local_name: raw,
+    resolution_scope: 'local',
+  }
+}
+
+function normalizeConstraint(node) {
+  switch (node.name) {
+    case 'type':
+      return { kind: 'type', type_name: node.args[0] }
+    case 'format':
+      return { kind: 'format', format_name: node.args[0] }
+    case 'enum':
+      return { kind: 'enum', values: node.args }
+    case 'const':
+      return { kind: 'const', value: node.args[0] }
+    case 'pattern':
+      return { kind: 'pattern', regex: node.args[0] }
+    case 'min':
+      return { kind: 'range', minimum: node.args[0] }
+    case 'max':
+      return { kind: 'range', maximum: node.args[0] }
+    case 'exclusive-min':
+      return { kind: 'range', exclusive_minimum: node.args[0] }
+    case 'exclusive-max':
+      return { kind: 'range', exclusive_maximum: node.args[0] }
+    case 'multiple-of':
+      return { kind: 'multiple-of', value: node.args[0] }
+    case 'between':
+      return { kind: 'range', minimum: node.args[0], maximum: node.args[1] }
+    case 'min-length':
+      return { kind: 'length', minimum_length: node.args[0] }
+    case 'max-length':
+      return { kind: 'length', maximum_length: node.args[0] }
+    case 'all-of':
+    case 'any-of':
+    case 'one-of':
+    case 'not':
+      return {
+        kind: 'composition',
+        operator: node.name.replace(/-/g, '_'),
+        branches: node.children.map(normalizeConstraintSet),
+      }
+    case 'if':
+    case 'then':
+    case 'else':
+      return {
+        kind: 'conditional-branch',
+        branch: node.name,
+        body: normalizeConstraintSet(node),
+      }
+    case 'dependent-required':
+      return {
+        kind: 'dependency',
+        mode: 'dependent_required',
+        subject_kind: node.props.prop ? 'prop' : 'child',
+        trigger_name: node.props.prop ?? node.props.child ?? null,
+        required_names: arrayify(node.props['requires-props'] ?? node.props['requires-children']),
+      }
+    case 'dependent-schema':
+      return {
+        kind: 'dependency',
+        mode: 'dependent_schema',
+        subject_kind: node.props.prop ? 'prop' : 'child',
+        trigger_name: node.props.prop ?? node.props.child ?? null,
+        schema: normalizeConstraintSet(node),
+      }
+    case 'assert':
+      return { kind: 'cel_assertion', expression: node.args[0] }
+    default:
+      return { kind: node.name, value: node.args[0] }
+  }
+}
+
+function normalizeConstraintSet(node) {
+  const set = {
+    subjects: [],
+    constraints: [],
+    annotations: [],
+  }
+
+  for (const child of node.children) {
+    if (isSubjectNode(child)) {
+      set.subjects.push(normalizeSubject(child))
+    } else if (isConstraintNode(child)) {
+      set.constraints.push(normalizeConstraint(child))
+    } else if (isAnnotationNode(child)) {
+      set.annotations.push(normalizeAnnotation(child))
+    }
+  }
+  pruneEmptyFields(set)
+  return set
+}
+
+function normalizeOccurrence(args) {
+  if (args[0] === 'required') return { min: 1, max: 1 }
+  if (args[0] === 'optional') return { min: 0, max: 1 }
+  if (args[0] === 'many') return { min: 0, max: 'unbounded' }
+  if (args[0] === 'at-least') return { min: args[1], max: 'unbounded' }
+  if (args[0] === 'at-most') return { min: 0, max: args[1] }
+  if (args[0] === 'between') return { min: args[1], max: args[2] }
+  return { min: 1, max: 1 }
+}
+
+function normalizeOpenness(value) {
+  if (value === 'open' || value === 'closed') return value
+  return 'unspecified'
+}
+
+function normalizeAnnotation(node) {
+  const [namespace, simpleName] = node.name.includes(':') ? node.name.split(':', 2) : [null, node.name]
+  const out = {
+    name: simpleName,
+    namespace,
+    arguments: node.args,
+    properties: node.props,
+  }
+  if (node.name === 'default' || node.name === 'visible-if' || node.name === 'enabled-if') {
+    out.cel_expression = typeof node.args[0] === 'string' ? node.args[0] : null
+  }
+  pruneEmptyFields(out)
+  return out
+}
+
+function collectAnnotations(nodes) {
+  return nodes.filter(isAnnotationNode).map(normalizeAnnotation)
+}
+
+function isSubjectNode(node) {
+  return ['document', 'node', 'prop', 'arg', 'args', 'value', 'props', 'children'].includes(node.name)
+}
+
+function isConstraintNode(node) {
+  return [
+    'type', 'format', 'enum', 'const', 'pattern', 'min', 'max', 'exclusive-min', 'exclusive-max',
+    'multiple-of', 'between', 'min-length', 'max-length', 'all-of', 'any-of', 'one-of', 'not',
+    'if', 'then', 'else', 'dependent-required', 'dependent-schema', 'assert',
+  ].includes(node.name)
+}
+
+function isAnnotationNode(node) {
+  return ['hint', 'highlight', 'bind', 'default', 'visible-if', 'enabled-if'].includes(node.name) || node.name.includes(':')
+}
+
+function normalizeSubjectKind(name) {
+  return name === 'document' ? 'document' : name
+}
+
+function kindUsesName(kind) {
+  return kind === 'node' || kind === 'prop'
+}
+
+function arrayify(value) {
+  if (value == null) return []
+  return Array.isArray(value) ? value : [value]
+}
+
+function pruneEmptyFields(object) {
+  for (const [key, value] of Object.entries(object)) {
+    if (value == null) delete object[key]
+    else if (Array.isArray(value) && value.length === 0) delete object[key]
+    else if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) delete object[key]
+  }
+}
+
+export function validateFixture(tree) {
+  const diagnostics = []
+  const schema = tree.children.find((node) => node.name === 'schema')
+  if (!schema) return diagnostics
+
+  const definitions = new Map()
+  for (const child of schema.children) {
+    if (child.name === 'define') {
+      const name = child.args[0]
+      if (definitions.has(name)) {
+        diagnostics.push({
+          category: 'duplicate-definition',
+          message: `Definition name '${name}' is declared more than once.`,
+          path: `schema.definitions.${name}`,
+          related: ['define "' + name + '" at first declaration', 'define "' + name + '" at second declaration'],
+        })
+      }
+      definitions.set(name, child)
+    }
+  }
+
+  walk(tree, (node, ancestry) => {
+    if (node.props.ref && !definitions.has(node.props.ref) && !String(node.props.ref).includes(':')) {
+      diagnostics.push({
+        category: 'unresolved-reference',
+        message: `Reference target '${node.props.ref}' could not be resolved.`,
+        path: makeRefPath(ancestry, node),
+      })
+    }
+    if (node.name === 'choice') {
+      const seen = new Set()
+      for (const branch of node.children) {
+        if (branch.name !== 'node') continue
+        const branchName = branch.args[0]
+        if (seen.has(branchName)) {
+          diagnostics.push({
+            category: 'ambiguous-choice-leading-name',
+            message: `Choice branches overlap on leading node name '${branchName}'.`,
+            path: 'schema.document.node[root].children.choice',
+          })
+          break
+        }
+        seen.add(branchName)
+      }
+    }
+  })
+
+  return diagnostics
+}
+
+function walk(node, visit, ancestry = []) {
+  for (const child of node.children ?? []) {
+    visit(child, ancestry)
+    walk(child, visit, ancestry.concat(child))
+  }
+}
+
+function makeRefPath(ancestry, node) {
+  const serviceNode = ancestry.find((entry) => entry.name === 'node' && entry.args[0])
+  const propNode = node.name === 'prop' ? node : ancestry.find((entry) => entry.name === 'prop' && entry.args[0])
+  if (serviceNode && propNode) {
+    return `schema.document.node[${serviceNode.args[0]}].prop[${propNode.args[0]}].ref`
+  }
+  return 'schema.ref'
+}
+
+export function writeJson(filePath, value) {
+  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`)
+}
+
+export function writeText(filePath, value) {
+  fs.writeFileSync(filePath, `${value}\n`)
+}
+
+export function replaceExtension(filePath, fromExt, toExt) {
+  return filePath.slice(0, -fromExt.length) + toExt
+}

@@ -6,8 +6,13 @@ This document is a normative-style draft for a revised KDL Schema Language.
 
 Related documents:
 
+- [`README.md`](./README.md) for the document index
 - [`DESIGN.md`](./DESIGN.md) for rationale and non-normative design guidance
 - [`AST.md`](./AST.md) for the normalized internal model
+- [`CONFORMANCE_PROFILES.md`](./CONFORMANCE_PROFILES.md) for implementation profiles
+- [`MERGE_SEMANTICS.md`](./MERGE_SEMANTICS.md) for how compatible reused fragments combine
+- [`CHOICE_AMBIGUITY.md`](./CHOICE_AMBIGUITY.md) for `choice` determinism rules
+- [`REFERENCE_COMPATIBILITY.md`](./REFERENCE_COMPATIBILITY.md) for ref target compatibility rules
 - [`TREE_SITTER.md`](./TREE_SITTER.md) for CST-oriented parser guidance
 - [`WELL_FORMEDNESS.md`](./WELL_FORMEDNESS.md) for schema validity rules
 
@@ -79,13 +84,13 @@ KSL implementations and specifications MUST follow these principles:
 
 ## 4. Canonical Surface Forms
 
-KSL SHOULD define one canonical surface spelling for each major concept.
+KSL MUST define one canonical surface spelling for each major concept.
 
-Conforming examples and style guidance SHOULD prefer the canonical forms below.
+Conforming examples and style guidance MUST use the canonical forms below.
 
 ### 4.1 Name-Bearing Declarations
 
-When introducing or matching a schema-defined concept by name, KSL SHOULD use a quoted string argument.
+When introducing or matching a schema-defined concept by name, KSL MUST use a quoted string argument.
 
 Canonical forms:
 
@@ -110,7 +115,7 @@ prop "host" optional {
 
 ### 4.2 Canonical Symbolic Values
 
-When expressing canonical symbolic values, KSL SHOULD use unquoted argument values.
+When expressing canonical symbolic values, KSL MUST use unquoted argument values.
 
 Canonical forms:
 
@@ -130,7 +135,7 @@ const tcp
 
 ### 4.3 References
 
-References to named schema components SHOULD use the `ref` property form.
+References to named schema components MUST use the `ref` property form.
 
 Canonical form:
 
@@ -144,11 +149,11 @@ prop "host" ref="common:hostname"
 node "bind" many ref="keybinding"
 ```
 
-Alternate spellings such as `ref name` SHOULD NOT be part of the canonical surface.
+Alternate spellings such as `ref name` MUST NOT be part of the canonical surface.
 
 ### 4.4 Literal Defaults
 
-Literal defaults SHOULD use the `default=<literal>` property form on the declaration they modify.
+Literal defaults MUST use the `default=<literal>` property form on the declaration they modify.
 
 Examples:
 
@@ -164,7 +169,7 @@ prop "retries" optional default=3 {
 
 ### 4.5 Computed Defaults
 
-Computed defaults SHOULD use a dedicated `default` child node whose argument is a CEL expression.
+Computed defaults MUST use a dedicated `default` child node whose argument is a CEL expression.
 
 Example:
 
@@ -176,7 +181,7 @@ This distinction avoids overloading one syntax form with both literal values and
 
 ### 4.6 Imports
 
-Imports SHOULD use:
+Imports MUST use:
 
 - a quoted schema identifier as the first argument
 - an `as` property for the namespace prefix
@@ -189,7 +194,7 @@ import "https://example.com/schemas/common" as="common"
 
 ### 4.7 Constraint Shape
 
-To minimize surface area, KSL SHOULD prefer:
+To minimize surface area, KSL MUST use:
 
 - child nodes for validation keywords such as `type`, `enum`, `const`, `format`, `min`, `max`, and `pattern`
 - properties for metadata-like modifiers attached to the declaration header such as `ref=...` and literal `default=...`
@@ -385,13 +390,13 @@ The `props` form declares constraints on the property map as a whole.
 
 KSL MUST support child-content modeling that accounts for ordered child nodes.
 
-To minimize surface area, KSL SHOULD use only the following child-content forms:
+To minimize surface area, KSL MUST use only the following child-content forms in the canonical surface:
 
 - bare `children { ... }`
 - `sequence { ... }`
 - `choice { ... }`
 
-The `unordered` keyword SHOULD NOT be part of the core language.
+The `unordered` keyword MUST NOT be part of the core language.
 
 ### 13.1 Bare `children`
 
@@ -412,7 +417,7 @@ Within `sequence`, items MUST be matched left-to-right against the child-node st
 
 A `choice { ... }` block MUST require exactly one branch to match.
 
-If multiple branches match in a way that the implementation cannot distinguish deterministically, the implementation SHOULD diagnose the schema as ambiguous.
+If multiple branches match in a way that the implementation cannot distinguish deterministically, the implementation MUST diagnose the schema as ambiguous according to [`CHOICE_AMBIGUITY.md`](./CHOICE_AMBIGUITY.md).
 
 Example:
 
@@ -460,7 +465,7 @@ define "port" {
 prop "listen-port" ref="port"
 ```
 
-Implementations SHOULD resolve local definitions before imported ones when both scopes are available.
+Implementations MUST resolve local definitions before imported ones when both scopes are available.
 
 ## 16. Composition
 
@@ -478,11 +483,11 @@ Semantics:
 - `one-of`: the instance MUST satisfy exactly one child subschema
 - `not`: the instance MUST NOT satisfy the child subschema
 
-Implementations SHOULD provide branch-aware diagnostics for composition failures.
+Implementations MUST provide branch-aware diagnostics for composition failures.
 
 ## 17. Declarative Conditionals
 
-KSL SHOULD support declarative conditionals modeled after JSON Schema.
+KSL MUST support declarative conditionals modeled after JSON Schema.
 
 ### 17.1 `if` / `then` / `else`
 
@@ -491,19 +496,19 @@ KSL SHOULD support declarative conditionals modeled after JSON Schema.
 
 ### 17.2 `dependent-required`
 
-KSL SHOULD support dependencies that require additional members when one member is present.
+KSL MUST support dependencies that require additional members when one member is present.
 
 This mechanism MUST be applicable to both properties and child nodes.
 
 ### 17.3 `dependent-schema`
 
-KSL SHOULD support dependencies that apply a subschema when a member is present.
+KSL MUST support dependencies that apply a subschema when a member is present.
 
 The dependent subschema MUST apply independently of the base schema.
 
 ## 18. Declarative Rules Versus CEL
 
-KSL SHOULD express constraints declaratively whenever practical.
+KSL MUST express constraints declaratively whenever practical.
 
 Declarative KSL MUST be used for:
 
@@ -561,11 +566,11 @@ Recommended built-in annotation categories include:
 - `highlight`
 - `bind`
 
-Documentation annotations SHOULD use the reserved `doc:` namespace.
+Documentation annotations MUST use the reserved `doc:` namespace.
 
 ## 20. Documentation Annotations
 
-KSL SHOULD support structured documentation annotations.
+KSL MUST support structured documentation annotations.
 
 Recommended forms:
 
@@ -706,7 +711,7 @@ Tree-sitter SHOULD NOT be expected to enforce semantic rules such as:
 
 ## 24. Post-Validation Model
 
-An implementation SHOULD define a post-validation information model in addition to pass/fail validation results.
+An implementation MUST define a post-validation information model in addition to pass/fail validation results.
 
 The post-validation model SHOULD be able to expose:
 

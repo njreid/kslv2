@@ -1,0 +1,14 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/ambiguous-choice" version="0.1.0" {
+  document {
+    node "root" required {
+      children closed {
+        choice {
+          node "env" many
+          node "env" optional
+        }
+      }
+    }
+  }
+}

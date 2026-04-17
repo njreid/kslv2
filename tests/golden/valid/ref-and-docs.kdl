@@ -1,0 +1,17 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/ref-docs" version="0.1.0" {
+  define "hostname" {
+    value {
+      type string
+      format hostname
+      doc:summary "Hostname value"
+    }
+  }
+
+  document {
+    node "service" required {
+      prop "host" required ref="hostname"
+    }
+  }
+}

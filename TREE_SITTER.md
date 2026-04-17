@@ -8,6 +8,14 @@ It is intentionally concrete-syntax-oriented. It complements `AST.md`, which def
 
 For schema-level semantic validity checks after parsing and normalization, see [`WELL_FORMEDNESS.md`](./WELL_FORMEDNESS.md).
 
+For resolved-reference compatibility after normalization, see [`REFERENCE_COMPATIBILITY.md`](./REFERENCE_COMPATIBILITY.md).
+
+For post-resolution structural combination rules, see [`MERGE_SEMANTICS.md`](./MERGE_SEMANTICS.md).
+
+For deterministic `choice` checking, see [`CHOICE_AMBIGUITY.md`](./CHOICE_AMBIGUITY.md).
+
+For the current grammar scaffold, see [`tree-sitter-ksl/`](./tree-sitter-ksl/).
+
 ## Goals
 
 The Tree-sitter grammar should support:

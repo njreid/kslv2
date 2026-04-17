@@ -1,0 +1,224 @@
+==================
+Minimal schema
+==================
+
+schema "https://example.com/schemas/minimal" version="0.1.0" {
+  document {
+    node "root" required
+  }
+}
+
+---
+
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string))
+    (children
+      (document_subject
+        (children
+          (node_subject
+            (string)
+            (occurrence_modifier)))))))
+
+==================
+Ref and docs
+==================
+
+schema "https://example.com/schemas/ref-docs" version="0.1.0" {
+  define "hostname" {
+    value {
+      type string
+      format hostname
+      doc:summary "Hostname value"
+    }
+  }
+
+  document {
+    node "service" required {
+      prop "host" required ref="hostname"
+    }
+  }
+}
+
+---
+
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string))
+    (children
+      (define_declaration
+        (string)
+        (children
+          (value_subject
+            (children
+              (type_constraint
+                (identifier))
+              (format_constraint
+                (identifier))
+              (qualified_annotation
+                (namespaced_identifier)
+                (string))))))
+      (document_subject
+        (children
+          (node_subject
+            (string)
+            (occurrence_modifier)
+            (children
+              (prop_subject
+                (string)
+                (occurrence_modifier)
+                (property
+                  (identifier)
+                  (string))))))))))
+
+==================
+Import and qualified ref
+==================
+
+schema "https://example.com/schemas/imported" version="0.1.0" {
+  import "https://example.com/schemas/common" as="common"
+
+  document {
+    node "service" required {
+      prop "host" required ref="common:hostname"
+    }
+  }
+}
+
+---
+
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string))
+    (children
+      (import_declaration
+        (string)
+        (property
+          (identifier)
+          (string)))
+      (document_subject
+        (children
+          (node_subject
+            (string)
+            (occurrence_modifier)
+            (children
+              (prop_subject
+                (string)
+                (occurrence_modifier)
+                (property
+                  (identifier)
+                  (string))))))))))
+
+==================
+Composition and conditionals
+==================
+
+schema "https://example.com/schemas/compose" version="0.1.0" {
+  document {
+    node "service" required {
+      all-of {
+        prop "mode" required {
+          type string
+        }
+        if {
+          prop "mode" {
+            const tcp
+          }
+        }
+        then {
+          prop "port" required {
+            type integer
+          }
+        }
+      }
+    }
+  }
+}
+
+---
+
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string))
+    (children
+      (document_subject
+        (children
+          (node_subject
+            (string)
+            (occurrence_modifier)
+            (children
+              (composition_constraint
+                (children
+                  (prop_subject
+                    (string)
+                    (occurrence_modifier)
+                    (children
+                      (type_constraint
+                        (identifier))))
+                  (conditional_constraint
+                    (children
+                      (prop_subject
+                        (string)
+                        (children
+                          (const_constraint
+                            (identifier))))))
+                  (conditional_constraint
+                    (children
+                      (prop_subject
+                        (string)
+                        (occurrence_modifier)
+                        (children
+                          (type_constraint
+                            (identifier)))))))))))))))
+
+==================
+CEL annotations and assert
+==================
+
+schema "https://example.com/schemas/cel" version="0.1.0" {
+  document {
+    node "workspace" required {
+      assert `hasProp("name")`
+      default `"main"`
+      visible-if `props.mode == "advanced"`
+      doc:summary "Workspace declaration"
+    }
+  }
+}
+
+---
+
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string))
+    (children
+      (document_subject
+        (children
+          (node_subject
+            (string)
+            (occurrence_modifier)
+            (children
+              (assert_constraint
+                (cel_literal))
+              (annotation_node
+                (cel_literal))
+              (annotation_node
+                (cel_literal))
+              (qualified_annotation
+                (namespaced_identifier)
+                (string)))))))))

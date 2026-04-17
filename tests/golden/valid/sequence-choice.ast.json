@@ -1,0 +1,80 @@
+{
+  "schema": {
+    "id": "https://example.com/schemas/sequence-choice",
+    "version": "0.1.0",
+    "imports": [],
+    "definitions": [],
+    "document": {
+      "kind": "document",
+      "occurrence": {
+        "min": 1,
+        "max": 1
+      },
+      "children": [
+        {
+          "kind": "node",
+          "occurrence": {
+            "min": 1,
+            "max": 1
+          },
+          "name": "root",
+          "content_model": {
+            "kind": "children",
+            "openness": "closed",
+            "content_model": {
+              "kind": "sequence",
+              "entries": [
+                {
+                  "kind": "node",
+                  "occurrence": {
+                    "min": 1,
+                    "max": 1
+                  },
+                  "children": [
+                    {
+                      "kind": "arg",
+                      "occurrence": {
+                        "min": 1,
+                        "max": 1
+                      },
+                      "constraints": [
+                        {
+                          "kind": "type",
+                          "type_name": "string"
+                        }
+                      ],
+                      "index": 0
+                    }
+                  ],
+                  "name": "name"
+                },
+                {
+                  "kind": "choice",
+                  "branches": [
+                    {
+                      "kind": "node",
+                      "occurrence": {
+                        "min": 0,
+                        "max": 1
+                      },
+                      "name": "tcp"
+                    },
+                    {
+                      "kind": "node",
+                      "occurrence": {
+                        "min": 0,
+                        "max": 1
+                      },
+                      "name": "unix"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "annotations": []
+  }
+}

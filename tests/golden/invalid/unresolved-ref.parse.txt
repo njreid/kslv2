@@ -1,0 +1,18 @@
+(source_file
+  (schema_declaration
+    (string)
+    (property
+      (identifier)
+      (string)
+    )
+    (document_subject
+      (node_subject
+        (identifier)
+        (identifier)
+        (prop_subject
+          (identifier)
+          (identifier)
+          (property
+            (identifier)
+            (identifier)
+          ))))))

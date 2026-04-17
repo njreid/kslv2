@@ -8,6 +8,12 @@ This AST is not user-facing syntax. All canonical surface forms in `SPEC.md` are
 
 For schema-level validity checks over this normalized model, see [`WELL_FORMEDNESS.md`](./WELL_FORMEDNESS.md).
 
+For use-site compatibility rules for resolved references, see [`REFERENCE_COMPATIBILITY.md`](./REFERENCE_COMPATIBILITY.md).
+
+For how compatible fragments combine after resolution, see [`MERGE_SEMANTICS.md`](./MERGE_SEMANTICS.md).
+
+For `choice` determinism checks over normalized content models, see [`CHOICE_AMBIGUITY.md`](./CHOICE_AMBIGUITY.md).
+
 ## Goals
 
 The normalized AST should:

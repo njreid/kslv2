@@ -1,0 +1,12 @@
+{
+  "name": "kslv2-drafts",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "golden:normalize": "node ./tools/golden-normalize.mjs",
+    "golden:validate": "node ./tools/golden-validate.mjs",
+    "tree-sitter:generate": "npm --prefix ./tree-sitter-ksl run generate",
+    "tree-sitter:test": "npm --prefix ./tree-sitter-ksl run test"
+  }
+}

@@ -1,0 +1,7 @@
+[
+  {
+    "category": "ambiguous-choice-leading-name",
+    "message": "Choice branches overlap on leading node name 'env'.",
+    "path": "schema.document.node[root].children.choice"
+  }
+]

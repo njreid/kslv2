@@ -1,0 +1,7 @@
+[
+  {
+    "category": "unresolved-reference",
+    "message": "Reference target 'hostname' could not be resolved.",
+    "path": "schema.document.node[service].prop[host].ref"
+  }
+]

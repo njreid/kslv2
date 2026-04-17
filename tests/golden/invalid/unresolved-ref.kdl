@@ -1,0 +1,9 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/unresolved-ref" version="0.1.0" {
+  document {
+    node "service" required {
+      prop "host" required ref="hostname"
+    }
+  }
+}

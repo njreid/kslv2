@@ -1,0 +1,17 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "ksl",
+      "camelcase": "Ksl",
+      "scope": "source.ksl",
+      "file-types": ["kdl", "ksl"],
+      "injection-regex": "^ksl$"
+    }
+  ],
+  "metadata": {
+    "version": "0.0.1",
+    "license": "UNLICENSED",
+    "description": "Tree-sitter grammar scaffold for KSL"
+  }
+}
