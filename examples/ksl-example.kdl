@@ -37,19 +37,10 @@ schema "https://example.com/schemas/service" version="1.0.0" {
         doc:summary "Connection mode"
       }
 
-      if {
-        prop "mode" {
-          const tcp
-        }
-      }
-      then {
-        prop "host" required ref=#hostname
-        prop "port" required ref=#port
-      }
-      else {
-        prop "socket" required {
-          type string
-        }
+      prop "host" required ref=#hostname when=`props.mode == "tcp"`
+      prop "port" required ref=#port when=`props.mode == "tcp"`
+      prop "socket" required when=`props.mode != "tcp"` {
+        type string
       }
 
       children closed {
