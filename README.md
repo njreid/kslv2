@@ -6,6 +6,53 @@ The goal is to explore a KDL-native, tool-friendly schema design that stays comp
 
 The documents here are intended to build on earlier KDL schema work in a constructive way and gather the pieces needed for a more cohesive forward path.
 
+## Quick Example
+
+```kdl
+schema "https://example.com/schemas/service" version="0.1.0" {
+  define #hostname {
+    value {
+      type string
+      format hostname
+    }
+  }
+
+  document {
+    node "service" required {
+      prop "mode" required {
+        type string
+        enum tcp unix
+      }
+
+      prop "host" required ref=#hostname when=`props.mode == "tcp"`
+      prop "port" required when=`props.mode == "tcp"` {
+        type integer
+        between 1 65535
+      }
+
+      prop "socket" required when=`props.mode != "tcp"` {
+        type string
+      }
+
+      children closed {
+        node "env" many {
+          arg 0 { type string }
+          arg 1 { type string }
+        }
+      }
+    }
+  }
+}
+```
+
+This is the general direction:
+
+- quoted node and property names
+- `#identity` handles for reusable schema fragments
+- unquoted canonical value symbols like `string` and `tcp`
+- `when=` guards for conditional structure
+- KDL-native children and argument modeling
+
 ## Start Here
 
 - [`SPEC.md`](./SPEC.md): surface language and canonical forms
