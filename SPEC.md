@@ -47,6 +47,14 @@ Common cases that SHOULD use `#identity` include:
 - local references such as `ref=#port`
 - imported references such as `ref=common:#hostname`
 
+The following `#` literals are reserved built-ins and MUST NOT be treated as reusable schema identities:
+
+- `#true`
+- `#false`
+- `#null`
+
+All other `#identifier` tokens in identity positions MUST be treated as reusable schema handles.
+
 Quotation marks SHOULD NOT be used for canonical symbolic values when the value consists only of identifier-safe characters.
 
 Common cases that SHOULD remain unquoted include:
@@ -142,6 +150,8 @@ const tcp
 ### 4.3 Reusable Identities
 
 Reusable schema components MUST be declared and referenced using `#identity` tokens.
+
+Reserved built-in literals `#true`, `#false`, and `#null` MUST NOT be accepted as reusable identities.
 
 Canonical forms:
 

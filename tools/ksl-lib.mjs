@@ -560,18 +560,30 @@ export function validateNormalizedAst(ast) {
 }
 
 function buildImportedDefinitionMap(imports) {
-  const mockRegistry = {
-    'https://example.com/schemas/common': {
-      hostname: { name: 'hostname', body: { kind: 'value', constraints: [{ kind: 'type', type_name: 'string' }] } },
-      'service-node': { name: 'service-node', body: { kind: 'node', name: 'service' } },
-    },
-  }
-
   const map = new Map()
   for (const binding of imports) {
-    map.set(binding.prefix, mockRegistry[binding.schema_id] ?? {})
+    map.set(binding.prefix, loadImportedDefinitions(binding.schema_id))
   }
   return map
+}
+
+function loadImportedDefinitions(schemaId) {
+  const fixturePath = importFixturePathForSchemaId(schemaId)
+  if (!fixturePath || !fs.existsSync(fixturePath)) return {}
+  const importedTree = parseKslText(readFile(fixturePath))
+  const importedAst = normalizeFixtureAst(importedTree)
+  const definitions = {}
+  for (const definition of importedAst.schema?.definitions ?? []) {
+    definitions[definition.name] = definition
+  }
+  return definitions
+}
+
+function importFixturePathForSchemaId(schemaId) {
+  const fixtureMap = {
+    'https://example.com/schemas/common': path.resolve(process.cwd(), 'tests', 'imports', 'common.kdl'),
+  }
+  return fixtureMap[schemaId] ?? null
 }
 
 function resolveReference(reference, localDefinitions, importedDefinitions) {

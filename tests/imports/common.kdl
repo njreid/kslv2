@@ -1,0 +1,18 @@
+/- kdl-version 2
+
+schema "https://example.com/schemas/common" version="0.1.0" {
+  define #hostname {
+    value {
+      type string
+      format hostname
+    }
+  }
+
+  define #service-node {
+    node "service" {
+      prop "name" optional {
+        type string
+      }
+    }
+  }
+}

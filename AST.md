@@ -223,6 +223,8 @@ Examples:
 - `ref=#port` -> `{ raw: "#port", namespace: null, local_name: "port", resolution_scope: local }`
 - `ref=common:#hostname` -> `{ raw: "common:#hostname", namespace: "common", local_name: "hostname", resolution_scope: imported }`
 
+Reserved literals `#true`, `#false`, and `#null` are not `ReferenceTarget` values and MUST remain boolean/null literals.
+
 ## Literal Values
 
 ```text

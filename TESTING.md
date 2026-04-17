@@ -24,6 +24,7 @@
 - `tree-sitter-ksl/queries/folds.scm`
 - `tree-sitter-ksl/queries/injections.scm`
 - `tests/golden/README.md`
+- `tests/imports/common.kdl`
 - `tests/golden/valid/*.kdl`
 - `tests/golden/invalid/*.kdl`
 - `examples/ksl-example.kdl`
@@ -42,6 +43,7 @@
 - Added `README.md` as a publishable document index and `CONFORMANCE_PROFILES.md` for implementation claims.
 - Added a minimal `tree-sitter-ksl/` scaffold with grammar and query placeholders.
 - Added `tests/golden/` fixtures for valid and invalid schema cases.
+- Added fixture-backed imported schema source under `tests/imports/` for import-resolution testing.
 - Replaced the fixture-shaped normalizer with a more general CST-to-AST lowering pass in `tools/ksl-lib.mjs`.
 - Expanded the Tree-sitter corpus to cover imports, composition/conditionals, and CEL-bearing annotations.
 - Added golden fixtures for `dependent-required`, `dependent-schema`, merge conflicts, and imported ref kind mismatches.
@@ -68,6 +70,7 @@
 - `tree-sitter-ksl/` is now a partial grammar scaffold for the canonical surface with a small passing corpus suite.
 - `tests/golden/` now includes concrete `.parse.txt`, `.ast.json`, and `.diagnostics.json` snapshot formats.
 - Root `package.json` exposes runnable scripts for golden snapshot generation and Tree-sitter verification.
+- Import resolution in the harness now loads known imported schemas from checked-in fixture files instead of a hard-coded in-memory registry.
 - `examples/twiml-voice-example-schema.kdl` is based on Twilio's published TwiML prose documentation; no official XSD was found at the obvious documentation endpoints.
 
 ## Run Status
