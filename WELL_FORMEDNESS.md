@@ -317,16 +317,7 @@ Composition and conditional branches MUST contain valid normalized constraint se
 
 `not` MUST contain exactly one branch.
 
-### 9.3 Conditional Structure
-
-An `if` without both `then` and `else` MAY be valid, but implementations SHOULD document exact profile expectations.
-
-At minimum:
-
-- `if` MUST contain a valid condition branch
-- `then` and `else`, if present, MUST each contain valid branch bodies
-
-### 9.4 Dependency Subject Compatibility
+### 9.3 Dependency Subject Compatibility
 
 `dependent-required` and `dependent-schema` MUST reference a supported trigger subject kind such as `prop` or `child`.
 

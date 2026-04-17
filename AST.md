@@ -348,11 +348,12 @@ CompositionConstraint {
 
 ```text
 ConditionalConstraint {
-  if_branch: ConstraintSet
-  then_branch: ConstraintSet?
-  else_branch: ConstraintSet?
+  when_expression: string
+  body: ConstraintSet
 }
 ```
+
+This form exists for guarded activation such as `when=<CEL>`.
 
 ### Dependency Constraint
 
@@ -505,6 +506,10 @@ Recommended lowering:
 - `assert` -> `CelAssertionConstraint`
 - `default <CEL>` -> `Annotation { name: "default", cel_expression: ... }`
 - `visible-if <CEL>` -> `Annotation { name: "visible-if", cel_expression: ... }`
+
+`assert <CEL>` is a non-core feature and SHOULD be profile-gated.
+
+The language design SHOULD collect common `assert` patterns before standardizing new declarative replacements.
 
 This keeps validation constraints distinct from tooling behavior.
 

@@ -62,7 +62,6 @@ Recommended named parse nodes:
 - `length_constraint`
 - `pattern_constraint`
 - `composition_constraint`
-- `conditional_constraint`
 - `dependency_constraint`
 - `assert_constraint`
 - `annotation_node`
@@ -127,12 +126,13 @@ Canonical header properties that should be recognized explicitly:
 - `ref=#...`
 - `default=<literal>`
 - `doc="..."`
+- `when=<CEL>`
 
 Suggested structure:
 
 ```text
 header_property
-  identifier              ; ref | default | extension key
+  identifier              ; ref | default | doc | when | extension key
   literal
 ```
 
@@ -195,11 +195,6 @@ composition_constraint
   operator                ; all-of | any-of | one-of | not
   block
     subject-or-fragment*
-
-conditional_constraint
-  if_block
-  then_block?
-  else_block?
 
 dependency_constraint
   property*

@@ -84,9 +84,6 @@ function classifyNode(name) {
     case 'any-of':
     case 'one-of':
     case 'not': return 'composition_constraint'
-    case 'if':
-    case 'then':
-    case 'else': return 'conditional_constraint'
     case 'dependent-required':
     case 'dependent-schema': return 'dependency_constraint'
     case 'assert': return 'assert_constraint'
@@ -368,14 +365,6 @@ function normalizeConstraint(node) {
         operator: node.name.replace(/-/g, '_'),
         branches: node.children.map(normalizeConstraintSet),
       }
-    case 'if':
-    case 'then':
-    case 'else':
-      return {
-        kind: 'conditional-branch',
-        branch: node.name,
-        body: normalizeConstraintSet(node),
-      }
     case 'dependent-required':
       return {
         kind: 'dependency',
@@ -461,7 +450,7 @@ function isConstraintNode(node) {
   return [
     'type', 'format', 'enum', 'const', 'pattern', 'min', 'max', 'exclusive-min', 'exclusive-max',
     'multiple-of', 'between', 'min-length', 'max-length', 'all-of', 'any-of', 'one-of', 'not',
-    'if', 'then', 'else', 'dependent-required', 'dependent-schema', 'assert',
+    'dependent-required', 'dependent-schema', 'assert',
   ].includes(node.name)
 }
 

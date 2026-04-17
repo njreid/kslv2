@@ -529,13 +529,11 @@ Implementations MUST provide branch-aware diagnostics for composition failures.
 
 ## 17. Declarative Conditionals
 
-KSL MUST support declarative conditionals modeled after JSON Schema.
+KSL MUST use declaration-local conditional activation rather than block-structured control flow.
 
-KSL SHOULD prefer declaration-local conditional activation over block-structured control flow.
+### 17.1 `when=`
 
-### 17.0 `when=`
-
-KSL SHOULD support a canonical `when=` header property for conditionally active declarations, constraints, and annotations.
+KSL MUST support a canonical `when=` header property for conditionally active declarations, constraints, and annotations.
 
 Recommended uses:
 
@@ -556,14 +554,7 @@ prop "socket" required when=`props.mode != "tcp"` {
 }
 ```
 
-If `when=` is supported, implementations SHOULD treat it as the preferred canonical conditional form.
-
-### 17.1 `if` / `then` / `else`
-
-- If the `if` subschema succeeds, the `then` subschema MUST apply if present.
-- If the `if` subschema fails, the `else` subschema MUST apply if present.
-
-If an implementation supports both `when=` and `if` / `then` / `else`, the implementation SHOULD normalize `if` / `then` / `else` into equivalent guarded constraints where possible.
+`if`, `then`, and `else` MUST NOT be part of the KSL language surface.
 
 ### 17.2 `dependent-required`
 
@@ -588,7 +579,7 @@ Declarative KSL MUST be used for:
 - scalar typing and enumeration
 - child-content structure
 - standard composition
-- standard conditional forms
+- `when=` guards and dependency forms
 
 CEL SHOULD be reserved for:
 
@@ -620,7 +611,11 @@ default `props.kind == "workspace" ? "main" : null`
 visible-if `props.mode == "advanced"`
 ```
 
-`when=` SHOULD be preferred over CEL-bearing control-flow structures when a declaration-local guard is sufficient.
+`when=` MUST be preferred over CEL-bearing control-flow structures when a declaration-local guard is sufficient.
+
+`assert <CEL>` MUST be treated as a non-core, profile-gated feature.
+
+The language design SHOULD collect common `assert` patterns before standardizing new declarative replacements.
 
 ## 19. Assertions and Annotations
 
@@ -698,7 +693,7 @@ schema-child :=
   document-node
 
 import-node := 'import' string 'as' '=' string
-define-node := 'define' string block
+define-node := 'define' identity block
 document-node := 'document' [header-modifier*] block
 
 subject-node :=
@@ -715,7 +710,7 @@ prop-subject := 'prop' string [occurrence] [header-property*] [block]
 arg-subject := 'arg' integer [occurrence] [header-property*] [block]
 args-subject := 'args' [occurrence-or-list-property*] [block]
 
-header-property := 'ref' '=' string | 'default' '=' literal
+header-property := 'ref' '=' identity | 'default' '=' literal | 'doc' '=' string | 'when' '=' cel-literal
 occurrence := 'required' | 'optional' | 'many' | 'at-least' integer | 'at-most' integer | 'between' integer integer
 
 constraint-node :=
@@ -727,7 +722,6 @@ constraint-node :=
   max-node |
   pattern-node |
   composition-node |
-  conditional-node |
   annotation-node
 
 type-node := 'type' symbol
@@ -740,7 +734,8 @@ children-item := node-subject | sequence-node | choice-node | ref-node
 sequence-node := 'sequence' block
 choice-node := 'choice' block
 
-ref-node := 'ref' string
+ref-node := 'ref' identity
+identity := '#' identifier | prefix ':' '#' identifier
 
 annotation-node := built-in-annotation | qualified-annotation
 built-in-annotation := hint-node | highlight-node | bind-node
@@ -832,7 +827,6 @@ Direct or near-direct mappings include:
 - `anyOf`
 - `oneOf`
 - `not`
-- `if` / `then` / `else`
 - `dependentRequired`
 - `dependentSchemas`
 

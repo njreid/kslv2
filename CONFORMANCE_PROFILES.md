@@ -58,7 +58,7 @@ The Composition profile extends Core Validation.
 Required:
 
 - `all-of`, `any-of`, `one-of`, `not`
-- `if`, `then`, `else`
+- `when=`
 - `dependent-required`, `dependent-schema`
 - branch diagnostics
 
@@ -83,16 +83,18 @@ The CEL Extension profile extends Core Validation.
 Required:
 
 - backtick CEL literals in supported positions
-- `assert <CEL>`
 - computed `default <CEL>`
 - clear diagnostics for invalid CEL placement
 
 Optional within the profile:
 
+- `assert <CEL>`
 - `visible-if <CEL>`
 - `enabled-if <CEL>`
 
 Implementations MUST document which CEL-bearing nodes they support.
+
+`assert <CEL>` is explicitly non-core and SHOULD only be claimed via the CEL Extension profile.
 
 ## Profile 5: Full Authoring
 

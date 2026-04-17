@@ -453,16 +453,14 @@ visible-if `props.mode == "advanced"`
 ```
 
 > Style:
-> If a rule can be expressed clearly with `type`, `enum`, `sequence`, `choice`, `if`, or `dependent-*`, prefer that over CEL.
+> If a rule can be expressed clearly with `type`, `enum`, `sequence`, `choice`, `when=`, or `dependent-*`, prefer that over CEL.
 
 > Implementation:
 > CEL should be a distinct evaluation phase over the normalized model, not a backdoor that mutates schema structure.
 
 ## Declarative Control Flow
 
-The current `if` / `then` / `else` model is expressive, but it reads like imperative control flow.
-
-KSL should prefer guarded declarations instead.
+KSL should use guarded declarations instead of block-structured conditionals.
 
 ### Recommended form: `when=`
 
@@ -482,9 +480,9 @@ prop "socket" required when=`props.mode != "tcp"` {
 
 This is more declarative because each rule states the condition under which it applies, rather than embedding those rules inside a separate branching structure.
 
-### Can `when=` replace `if` / `then` / `else`?
+### Can `when=` replace conditional branching?
 
-For most practical schema authoring, yes.
+Yes.
 
 It cleanly covers:
 
@@ -504,39 +502,36 @@ prop "key" required when=`hasChild("tls")`
 ### Why `when=` is better
 
 - it keeps conditions attached to the declarations they affect
-- it avoids separate `then` and `else` blocks that feel procedural
+- it avoids separate control-flow blocks that feel procedural
 - it composes better with reuse and annotations
 - it reduces nesting and visual noise
 
-### What should remain first-class even if `when=` exists
+### What should remain first-class even with `when=`
 
 `dependent-required` and `dependent-schema` should remain first-class.
 
 They are declarative, common, and more interoperable than encoding everything as CEL.
 
-### Should `if` / `then` / `else` disappear entirely?
-
-Probably not immediately.
-
 Recommendation:
 
-- make `when=` the preferred canonical conditional style
-- keep `if` / `then` / `else` only as a secondary, less-preferred form or compatibility form
-- normalize `if` / `then` / `else` into guarded internal constraints where possible
+- make `when=` the only conditional surface form
+- remove `if` / `then` / `else` from the language entirely
 
 ### Other parts of KSL that still feel imperative
 
 These parts still read more like execution logic than pure schema declaration:
 
-- `if` / `then` / `else`
+- `assert <CEL>`
 - `default <CEL>` when used as computed behavior rather than descriptive metadata
 - `visible-if <CEL>` and `enabled-if <CEL>` because they describe UI behavior, not schema shape
 
 Recommendations:
 
-- prefer `when=` over `if` / `then` / `else`
+- keep `when=` as the only conditional surface form
 - keep computed defaults but treat them as annotation-like behavior, not structural schema control flow
 - keep UI-facing conditional annotations clearly outside the validation core
+- mark `assert <CEL>` as non-core and profile-gated
+- collect common `assert` patterns before introducing declarative replacements
 
 ## Node Archetypes Without New Keywords
 
@@ -631,7 +626,6 @@ Adopt directly where it fits:
 - scalar constraints
 - `enum`, `const`
 - `allOf`, `anyOf`, `oneOf`, `not`
-- `if`, `then`, `else`
 - `dependentRequired`, `dependentSchemas`
 
 Adapt for KDL:

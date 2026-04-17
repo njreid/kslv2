@@ -48,7 +48,6 @@ module.exports = grammar({
       $.length_constraint,
       $.pattern_constraint,
       $.composition_constraint,
-      $.conditional_constraint,
       $.dependency_constraint,
       $.assert_constraint,
       $.content_ref,
@@ -84,7 +83,6 @@ module.exports = grammar({
     length_constraint: ($) => seq(optional($.tag), choice('min-length', 'max-length'), field('value', $.integer)),
 
     composition_constraint: ($) => seq(optional($.tag), choice('all-of', 'any-of', 'one-of', 'not'), field('body', $.children)),
-    conditional_constraint: ($) => seq(optional($.tag), choice('if', 'then', 'else'), field('body', $.children)),
     dependency_constraint: ($) => seq(optional($.tag), choice('dependent-required', 'dependent-schema'), repeat(field('header', $.property)), optional(field('body', $.children))),
     assert_constraint: ($) => seq(optional($.tag), 'assert', field('expression', $.cel_literal)),
 

@@ -154,9 +154,6 @@ Branch-body references are references used inside:
 - `any-of`
 - `one-of`
 - `not`
-- `if`
-- `then`
-- `else`
 - `dependent-schema`
 
 ### 3.1 Constraint-Context Compatibility
